@@ -1,0 +1,36 @@
+Ants
+
+Dwarf fortress style - tell them what to do and they carry out your orders
+
+Square grid. Vertically laid out
+
+3 Main materials - Air, tunnel wall, dirt.
+Air = 0 tunnel wall, dirt = 2 tunnel wall
+Main building material is dirt,
+Dig out a base below ground while building a structure above ground
+
+Dirt gets dragged above ground automatically
+
+Ants and water
+
+
+
+
+Enemies:
+Water: 
+
+
+
+
+Each dirt block 
+
+
+
+
+
+
+.......
+.......
+DDDDDDD
+DDDDDDD
+DDDDDDD

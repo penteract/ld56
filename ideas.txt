@@ -1,0 +1,67 @@
+Reflection - puzzle game where you move by reflecting
+  - arrange mirrors to guide a laser
+  - complete a picture by merging it with its reflection (was this an advent of code puzzle?)
+
+Absorb - fight enemies and absorb them
+
+You are not supposed to be here - break in to computer system or physical location
+  - You are not supposed to be here? - player could be keeping others out
+Playing with fire
+  - 2 interpretations, literal and metaphorical
+    - 
+  - build a nuclear reactor
+    - sort of relates to both
+  - easter egg message in fire alphabet?
+Tiny creatures
+  - pokemon-like
+  - modelling bacterial growth, cellular automaton?
+  - ants - puzzle game
+Under pressure
+ - air pressure, water pressure, time pressure, social pressure
+ - building a structure that can survive maximum pressure
+ 
+Mutation
+  - absorb ideas may work here
+  - genetics/animal breeding (could also work with tiny creatures)
+  - functional programming :P
+
+Side effects
+ - "sides"
+ - something in 4d (4d maze!)
+ - rolling cube puzzle
+ - geometry
+ - under pressure examples
+
+Salvage
+ - chess where you play one turn then pass the board to somebody else
+Shelter
+ - construct shelter, find shelter (survival game)
+ - submarine/pressure
+Isolation
+  - survival game
+  - electrical isolation?
+  - submarine?
+Pathways
+  - maze (4D?)
+  - something combinatorial
+  - logic puzzle (one guard lies, the other tells the truth)
+Descend
+  - under pressure/submarine
+  - digging/mining
+Lost signal
+  - a sign that someone is lost
+  - cell tower arrangement
+    - heightmap
+Connections
+  - lost signal, pathways
+  - points on a graph
+Strange machines
+ - physics simulation/construction
+ - spacechem with irrational numbers and without the layout questions
+Ruins
+ - Exploring a ruins
+ - actively ruining something
+ - playing with fire ideas
+Break the cycle
+ - edges to remove in directed graph to break all cycles
+   - this also works for connections
