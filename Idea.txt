@@ -34,3 +34,21 @@ Each dirt block
 DDDDDDD
 DDDDDDD
 DDDDDDD
+
+Cells are dirt, tunnel wall, or ait; each cell can have water or ant 
+maybe also stone
+Ants pathfind to nearest task - if emty handed try to dig something, otherwise try to place something
+if no specified building, try to place tunnel wall at nearest air block 
+
+Water spawns in sky during rain some distance above highest structure
+Falls down, probabalistcally moves left or right if on solid ground
+Probability to treat dirt as air
+
+Disapears when below simulation fog 
+
+Flood intensity increases over time?
+
+Simulation occurs only within bounds of any structure built/dug - sides treated as walls for water, etc
+
+Prodedual generation of features like stone, caverns (possibly with enemies), resources?
+Decide based on coords whether to generate pfeature; store partial features so can be filled in when simulation fog expands 
