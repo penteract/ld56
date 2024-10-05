@@ -224,8 +224,7 @@ class Ant {
                     }
                 }
                 else if (isAir(next)) {
-                    this.plan.pop()
-                    this.doDrag(cur, next)
+                    this.doDrag()
                 }
                 else {
                     // TODO
@@ -258,7 +257,6 @@ class Ant {
 
                     }
                     else if (other = targets[["worker", next]]) {
-                        // TODO: rewrite using popTask/giveTask
                         // append remainder of plan to its plan, switch ant with dirt, find new plan
 
                         console.log("found another targeted block - handing off plan")
@@ -272,6 +270,10 @@ class Ant {
                         otherPlan = concatPaths(myPlan, otherPlan)
                         other.giveTask([myType, otherPlan])
 
+                        // give task to properly clear the order
+                        this.giveTask(["worker", [next]])
+                        assert(this.popTask()[0] == "finished")
+
                         let newType = getType(next)
                         this.findTarget(newType, next)
                     }
@@ -283,7 +285,7 @@ class Ant {
                             let myTask = this.popTask()
                             let otherTask = other.popTask()
                             this.giveTask(otherTask) // don't need to modify this path (now), block path hasn;t changed 
-                            this.doDrag(next, otherNext)
+                            this.doDrag()
 
                             if (myTask[1][myTask[1].length - 2] + "" === other.p + "") {
                                 console.log("simplifying path")
@@ -531,7 +533,7 @@ function tick() {
 tickInterval = null
 function setTickrate(rate) {
     clearInterval(tickInterval)
-    setInterval(tick, rate)
+    tickInterval = setInterval(tick, rate)
 }
 
 setTickrate(200)
