@@ -11,31 +11,10 @@ Dig out a base below ground while building a structure above ground
 
 Dirt gets dragged above ground automatically
 
-Ants and water
 
 
 
-
-Enemies:
-Water: 
-
-
-
-
-Each dirt block 
-
-
-
-
-
-
-.......
-.......
-DDDDDDD
-DDDDDDD
-DDDDDDD
-
-Cells are dirt, tunnel wall, or ait; each cell can have water or ant 
+Cells are dirt, tunnel wall, or air; each cell can have water or ant
 maybe also stone
 Ants pathfind to nearest task - if emty handed try to dig something, otherwise try to place something
 if no specified building, try to place tunnel wall at nearest air block 
@@ -52,3 +31,16 @@ Simulation occurs only within bounds of any structure built/dug - sides treated 
 
 Prodedual generation of features like stone, caverns (possibly with enemies), resources?
 Decide based on coords whether to generate pfeature; store partial features so can be filled in when simulation fog expands 
+
+
+
+
+Technical questions:
+svg vs canvas:
+I ddecided on canvas, because there's a limit to how fancy animations can be done with them and because Joe seemed skeptical about extending SVG objects.
+
+To do limited rendering properly, the map should be a quadtree. I don't think it's big enough to bother.
+
+Do we handle collisions? Seems like a recipie for ants getting stuck. If ants can collide with ants, they would need to be able to move out of the way. Perhaps they can be pushed? Deadlock still seems possible.
+
+For the f
