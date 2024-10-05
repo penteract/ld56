@@ -1,3 +1,19 @@
+let map = { "0,-1": ["tunnel"] }  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
+let water = [] //[[1,-2]] // immutable?
+let tunnels = [[0, -1]]
+let dirts = []
+
+// Orders Could generalize by what the order needs:
+//   digging is dirt that needs an ant,
+//   building is air or tunnel that needs dirt
+//
+let orders = { "worker": {}, "dirt": {}, "queen": {} } // These are really Set()s because lists are objects
+
+
+let draggers = {} // tracks if anyone is dragging a particular thing {[thing,postion]:Ant}
+let targets = {} // tracks if anyone is targeting a particular position {[task,postion]:Ant}
+
+
 const ants = []
 class Ant {
     constructor(p) {
@@ -13,14 +29,18 @@ class Ant {
         move(this, this.p, dst)
     }
 
-    findDigPlan() {
+    findTarget(type,start) {
         let ant = this
-        let ordrs = orders["worker"]// TODO: check if empty
+        let ordrs = orders[type]// TODO: check if empty
 
         // This is a heap because that might help with efficiency if we try to reuse it
         // might give suboptimal paths, but it's better than flood filling the map for every ant.
         // We probably need a path fixer that removes loops
-        let heap = [[0, [ant.p, null]]]
+        if (start===undefined) {
+            assert(type==="worker")
+            start=this.p}
+        else {assert([...neighbs(start)].find(x=>x==this.p+"")) }
+        let heap = [[0, [this.p, null]]]
         let seen = {}
         seen[heap[0][1][0]] = true
         let found = undefined
@@ -42,130 +62,153 @@ class Ant {
             }
         }
         console.log(Object.keys(seen).length, found)
-        ant.plan = linkedListToArray(found)
-        ant.plan.pop()
-        targets[["worker", ant.plan[0]]] = ant
-        ant.dragging = undefined
+        if(found){
+            let plan = linkedListToArray(found)
+            console.log(plan)
+            if(type==="worker"){plan.pop()}
+            this.giveTask([type,plan])
+        }
+        // targets[["worker", this.plan[0]]] = this
+        // this.dragging = undefined
     }
 
     popTask() {
+        //return type [type,plan], ["finished",locaton], "finished"
         if (!this.plan) return null
-        if (this.plan.length === 0) {
-            // 
-        }
+        let plan = this.plan
         let target = this.plan[0]
         let type = this.dragging ?? "worker"
         let task0 = [type, target]
-        assert(targets[task0] === this)
-        targets[task0] = undefined
-        assert(!orders[type][target]) // assume we cannot place an order on an existing order (including if the existing order has started to be executed)
-        orders[type][target] = true
-        let plan = this.plan
-        this.plan = null
-        if (!this.dragging) {
+        if (this.dragging) {
             let dragPos = this.plan[this.plan.length - 1]
             assert(draggers[[type, dragPos]] === this)
             draggers[[type, dragPos]] = undefined
             this.dragging = null
         }
+        assert(targets[task0] === this)
+        targets[task0] = undefined
+        assert(!orders[type][target]) // assume we cannot place an order on an existing order (including if the existing order has started to be executed)
+        if (plan.length === 0) {
+            return "finished"
+        }
+        if (plan.length === 1) {
+            if (type==="worker"){return ["finished",plan[0]]}
+            else {return "finished"}
+        }
+        orders[type][target] = true
+        this.plan = null
         return [type, plan]
     }
 
     giveTask(task) {
         assert(!this.plan)
-        if (task === null) return
+        if (task === null || task === "finished" || task[0] === "finished") return
         let [type, plan] = task
         let target = plan[0]
         let task0 = [type, target]
         orders[type][target] = undefined
-
-    }
-
-    findBuildPlan() {
-        //
+        targets[type,target] = this
+        this.plan = plan
+        if(type !== "worker"){
+            this.dragging = type
+            assert(draggers[type,plan[plan.length-1]] === undefined)
+            draggers[type,plan[plan.length-1]] = this
+        }
     }
 
     followPlan() {
+        console.log("following plan")
         let ant = this
         let other
-        l = ant.plan.length
-        if (l === 0) {
-            ant.popTask()
+        let l = this.plan.length
+        //print(l)
+        if (l === 0) { // Plan is probably complete
+            assert ( this.popTask()==="finished" )
             return
         }
-        next = ant.plan[l - 1]
-        if (canWalk(next)) {
-            ant.move(next)
-            ant.plan.pop()
-        }
-        else {
-            if (isDirt(next)) {
-                // ordered: done - find new plan
-                // targeted: switch plans with targeter
-                // dragged: ??
-                // built: swap
-                if (orders["worker"][next]) {
-                    // switch ant with dirt, find new plan
-                    ant.plan.pop()
-                    p = ant.p
-                    ant.move(next)
-                    move("dirt", next, p)
-
-                    // findBuildPlan
-                }
-                if (other = targets[["worker", next]]) {
-                    // append remainder of plan to its plan, switch ant with dirt, find new plan
-                    assert(other.plan && other.plan[0] == next)
-                    // ant.plan: last elt is next, first elt is original target
-                    // other.plan: last elt is its next, first elt is its target which is next
-                    ant.plan.pop()
-                    other.plan = ant.plan.concat(other.plan)
-
-                    ant.plan.pop()
-                    p = ant.p
-                    ant.move(next)
-                    move("dirt", next, p)
-
-                    // findBuildPlan
-                }
-                if (draggers[["dirt", next]]) {
-                    // ?
-                }
+        if(l === 1){
+            let result = this.popTask
+            if (result==="finished") {return}
+            else if (result[0]==="finished"){
+                let type = getType(result[1])
+                let r = findTarget(type,result[1])
             }
-            else if (other = hasAnt(next)) {
-                if (!other.dragging) {
+        }
+        if(this.dragging){
+            next = this.plan[l - 2]
+            if(canWalk(next)){
+                move(this.dragging,this.plan[l - 1],next)
+                this.move(this.plan[l - 1])
+            }
+            //TODO
+            else{
+                assert(false)
+            }
+        }
+        else{ // worker task
+            let next = this.plan[l - 1]
+            console.log("next")
+            if (canWalk(next)) {
+                console.log("canwalk")
+                this.move(next)
+                this.plan.pop()
+            }
+            else {
+                if (isDirt(next)) {
+                    // ordered: done - find new plan
+                    // targeted: switch plans with targeter
+                    // dragged: ??
+                    // built: swap
+                    if (orders["worker"][next]) {
+                        // switch ant with dirt, find new plan
+                        this.plan.pop()
+                        p = ant.p
+                        ant.move(next)
+                        move("dirt", next, p)
 
+                        // findBuildPlan
+                    }
+                    if (other = targets[["worker", next]]) {
+                        // append remainder of plan to its plan, switch ant with dirt, find new plan
+                        assert(other.plan && other.plan[0] == next)
+                        // ant.plan: last elt is next, first elt is original target
+                        // other.plan: last elt is its next, first elt is its target which is next
+                        this.plan.pop()
+                        other.plan = ant.plan.concat(other.plan)
+
+                        this.plan.pop()
+                        p = ant.p
+                        ant.move(next)
+                        move("dirt", next, p)
+
+                        // findBuildPlan
+                    }
+                    if (draggers[["dirt", next]]) {
+                        // ?
+                    }
+                }
+                else if (other = hasAnt(next)) {
+                    if (!other.dragging) {
+
+                    }
                 }
             }
         }
     }
 
 }
-}
+
+
 
 queen = new Ant([0, 0])
 queen.queen = false // TODO:make this matter and change it to true
-let map = { "0,-1": ["tunnel"] }  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
-let water = [] //[[1,-2]] // immutable?
-let tunnels = [[0, -1]]
-let dirts = []
-
-// Orders Could generalize by what the order needs:
-//   digging is dirt that needs an ant,
-//   building is air or tunnel that needs dirt
-//
-let orders = { "worker": {}, "dirt": {}, "queen": {} } // These are really Set()s because lists are objects
 
 function sel(p) {
     orders["worker"][p] = true
     console.log(p)
 }
-
-let draggers = {} // tracks if anyone is dragging a particular thing {[thing,postion]:Ant}
-let targets = {} // tracks if anyone is targeting a particular position {[task,postion]:Ant}
-
-put("water", [10, 2])
-water.push([10, 2])
+//put("water", [10, 2])
+//water.push([10, 2])
 
 function add(p, q) {
     return [p[0] + q[0], p[1] + q[1]]
@@ -175,9 +218,13 @@ function isDirt(p) {
     return (p[1] < 0 && !map[p]?.includes("tunnel")
         || map[p]?.includes("dirt"))
 }
+function getType(p){
+    assert(isDirt(p))
+    return "dirt"
+}
 
 function hasAnt(p) {
-    return map[p].find(item => item instanceof Ant)
+    return map[p]?.find(item => item instanceof Ant)
 }
 
 function canWalk(p) {
@@ -209,7 +256,7 @@ function willWalk(p) {
 
 function take(thing, src) {
     let l = map[src]
-    if (l.length == 1) delete map[src]
+    if (l?.length === 1) delete map[src]
     else l.splice(l.indexOf(thing), 1)
 }
 function put(thing, dst) {
@@ -286,7 +333,7 @@ function tick() {
 
     for (let ant of ants) {
         if (!ant.plan) {
-            ant.findDigPlan()
+            ant.findTarget("worker")
         }
         if (ant.plan) { // Execute plan
             ant.followPlan()
