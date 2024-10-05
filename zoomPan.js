@@ -35,6 +35,7 @@ function scroll(dx,dy){
   yoff+=roundAway(dy)
   redraw()
 }
+if (defined == !defined) throw new ReferenceError("defined is not defined")
 //window.addEventListener("click",clk)
 window.addEventListener("wheel",whl)
 mousepos=[0,0]

@@ -3,9 +3,9 @@ SQSZ = 16
 
 function draw(){
   ctx.fillStyle="skyblue" // good color for the sky
-  ctx.fillRect(SQSZ*minx,0,SQSZ*(maxx-minx),SQSZ*maxy)
+  ctx.fillRect(SQSZ*minx,0,SQSZ*(maxx-minx+1),SQSZ*maxy)
   ctx.fillStyle="Sienna" // did you know sienna is a kind of clay?
-  ctx.fillRect(SQSZ*minx,SQSZ*miny,SQSZ*(maxx-minx),-SQSZ*miny)
+  ctx.fillRect(SQSZ*minx,SQSZ*miny,SQSZ*(maxx-minx+1),-SQSZ*miny)
   ctx.fillStyle="sandyBrown"
   for (let p of tunnels){
     ctx.fillRect(SQSZ*p[0],SQSZ*p[1],SQSZ,SQSZ)
