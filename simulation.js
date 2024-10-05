@@ -27,6 +27,10 @@ class Ant {
 
     }
     move(dst) {
+        maxx = Math.max(maxx,this.p[0]+Margin)
+        minx = Math.min(minx,this.p[0]-Margin)
+        maxy = Math.max(maxy,this.p[1]+Margin)
+        miny = Math.min(miny,this.p[1]-Margin)
         move(this, this.p, dst)
         this.p = dst
     }
