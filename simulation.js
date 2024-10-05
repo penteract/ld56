@@ -355,7 +355,6 @@ otherAnt = new Ant([1, 0])
 queen.queen = false // TODO:make this matter and change it to true
 
 function sel(p) {
-    for(let x
     if (!targets[["worker", p]] && isDirt(p)) {
         orders["worker"][p] = true
     }
