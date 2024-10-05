@@ -91,7 +91,7 @@ class Ant {
                 }
             }
         }
-        console.log(Object.keys(seen).length, found)
+        //console.log(Object.keys(seen).length, found)
         if (found) {
             let plan = linkedListToArray(found)
             console.log(plan)
@@ -241,8 +241,48 @@ class Ant {
                 else if (isAir(next)) {
                     this.doDrag()
                 }
-                else {
+                else if (isDirt(next)) { // encountered some dirt
+
                     // TODO
+                    assert(false)
+
+                }
+                else if (isDirt(next)) {
+                    if (other = draggers[[dirt,next]]){
+                        assert(false)
+                    }
+                    else{
+                        if ((other = targets[["worker", next]]) || orders["worker"][next]) {
+                            origPlan = this.plan
+                            origPos = this.p
+                            origPlan.push(origPos)
+                            origPlan.push(origPlan[origPlan.length-2])
+                            doDrag() // if this puts dirt into air, it unsets our plan
+                            let oldTask = this.popTask() // this may be undefined, but not finished
+                            origPlan.length-=2 // pushed +2, popped -1, moved +1
+                            if(other){//take their dirt and give them ours
+                                let [type,otherPlan] = other.popTask()
+                                if(type==="finished") {otherPlan = [otherPlan]}
+                                else {assert (type==="worker")}
+                                if(oldTask) {
+                                    other.giveTask([
+                                        "worker",
+                                        concatPaths([origPos, this.p],otherPlan)
+                                        ])
+                                }
+                            }
+                            this.giveTask(["dirt" ,origPlan])
+                        }
+                        else{
+                            // wait for next turn and recalculate path around obstacle then
+                            let t = this.popTask()
+                            if(t!="finished" && t[0]!="finished"){
+                                this.giveTask(["worker",[t[1][t[1].length-1]]])
+                            }
+                        }
+                    }
+                }
+                else{
                     assert(false)
                 }
             }
