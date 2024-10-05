@@ -241,12 +241,6 @@ class Ant {
                 else if (isAir(next)) {
                     this.doDrag()
                 }
-                else if (isDirt(next)) { // encountered some dirt
-
-                    // TODO
-                    assert(false)
-
-                }
                 else if (isDirt(next)) {
                     if (other = draggers[[dirt,next]]){
                         assert(false)
