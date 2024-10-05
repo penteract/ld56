@@ -22,16 +22,28 @@ class Ant {
         this.dragging = null // thing (e.g. "dirt")
         this.idx = ants.length
         this.p = p
+        put(this, p)
         ants.push(this)
 
     }
     move(dst) {
         move(this, this.p, dst)
+        this.p = dst
     }
 
     findTarget(type, start) {
-        let ant = this
-        let ordrs = orders[type]// TODO: check if empty
+        // console.log(this, type, start)
+        let ordrs = orders[type]
+        if (Object.keys(ordrs).length === 0 && type !== "dirt") return
+
+        function validOrder(q) {
+            if (ordrs[q]) return true
+            if (Object.keys(ordrs).length === 0 && type === "dirt") {
+                return isAir(q)
+            }
+            if (type == "dirt") console.log(q)
+            return false
+        }
 
         // This is a heap because that might help with efficiency if we try to reuse it
         // might give suboptimal paths, but it's better than flood filling the map for every ant.
@@ -41,7 +53,7 @@ class Ant {
             start = this.p
         }
         else { assert([...neighbs(start)].find(x => x == this.p + "")) }
-        let heap = [[0, [this.p, null]]]
+        let heap = [[0, [start, null]]]
         let seen = {}
         seen[heap[0][1][0]] = true
         let found = undefined
@@ -51,10 +63,10 @@ class Ant {
             let [d, path] = r
             for (let q of neighbs(path[0])) {
                 //console.log("v")
-                if (!seen[q] && willWalk(q) && inBounds(q) || ordrs[q]) {
+                if (!seen[q] && willWalk(q) && inBounds(q) || validOrder(q)) {
                     //console.log("a")
                     seen[q] = true
-                    if (ordrs[q]) {
+                    if (validOrder(q)) {
                         found = [q, path]
                     }
                     heappush(heap, d + 1, [q, path])
@@ -83,12 +95,13 @@ class Ant {
         if (this.dragging) {
             let dragPos = this.plan[this.plan.length - 1]
             assert(draggers[[type, dragPos]] === this)
-            draggers[[type, dragPos]] = undefined
+            delete draggers[[type, dragPos]]
             this.dragging = null
         }
         assert(targets[task0] === this)
-        targets[task0] = undefined
+        delete targets[task0]
         assert(!orders[type][target]) // assume we cannot place an order on an existing order (including if the existing order has started to be executed)
+        this.plan = null
         if (plan.length === 0) {
             return "finished"
         }
@@ -97,7 +110,6 @@ class Ant {
             else { return "finished" }
         }
         orders[type][target] = true
-        this.plan = null
         return [type, plan]
     }
 
@@ -107,18 +119,28 @@ class Ant {
         let [type, plan] = task
         let target = plan[0]
         let task0 = [type, target]
-        orders[type][target] = undefined
-        targets[type, target] = this
+        delete orders[type][target]
+        targets[task0] = this
         this.plan = plan
         if (type !== "worker") {
             this.dragging = type
-            assert(draggers[type, plan[plan.length - 1]] === undefined)
-            draggers[type, plan[plan.length - 1]] = this
+            assert(draggers[[type, plan[plan.length - 1]]] === undefined)
+            draggers[[type, plan[plan.length - 1]]] = this
         }
     }
 
+    doDrag(src, dest) {
+        console.log(draggers)
+        assert(draggers[[this.dragging, src]] === this)
+        delete draggers[[this.dragging, src]]
+        assert(!draggers[[this.dragging, dest]])
+        draggers[[this.dragging, dest]] = this
+        move(this.dragging, src, dest)
+        this.move(src)
+    }
+
     followPlan() {
-        console.log("following plan")
+        console.log("following plan", this.plan, this.dragging)
         let ant = this
         let other
         let l = this.plan.length
@@ -128,22 +150,51 @@ class Ant {
             return
         }
         if (l === 1) {
-            let result = this.popTask
+            let result = this.popTask()
             if (result === "finished") { return }
             else if (result[0] === "finished") {
                 let type = getType(result[1])
-                let r = findTarget(type, result[1])
+                this.findTarget(type, result[1])
             }
+            else assert(false)
+            return // could be a recursive call 
         }
         if (this.dragging) {
-            next = this.plan[l - 2]
+            let cur = this.plan[l - 1]
+            let next = this.plan[l - 2]
             if (canWalk(next)) {
-                move(this.dragging, this.plan[l - 1], next)
-                this.move(this.plan[l - 1])
+                this.doDrag(cur, next)
+                this.plan.pop()
+                return
             }
-            //TODO
             else {
-                assert(false)
+                // reasons we can't move:
+                // - ant in the way
+                // -- if it's us, just swap
+                // -- otherwise, probably switch tasks? depends on its task
+                // - dirt in the way
+                // -- if being dragged, maybe switch tasks. else, swap and pick up that
+                // - it's air, that we wouldn't be able to walk on but can push dirt on
+                // - ???
+                if (other = hasAnt(next)) {
+                    if (other === this) {
+                        this.doDrag(cur, next)
+                        this.plan.pop()
+                        return
+                    }
+                    else {
+                        // TODO
+                        assert(false)
+                    }
+                }
+                else if (isAir(next)) {
+                    this.doDrag(cur, next)
+                    this.plan.pop()
+                }
+                else {
+                    // TODO
+                    assert(false)
+                }
             }
         }
         else { // worker task
@@ -153,6 +204,7 @@ class Ant {
                 console.log("canwalk")
                 this.move(next)
                 this.plan.pop()
+                return
             }
             else {
                 if (isDirt(next)) {
@@ -161,15 +213,14 @@ class Ant {
                     // dragged: ??
                     // built: swap
                     if (orders["worker"][next]) {
-                        // switch ant with dirt, find new plan
-                        this.plan.pop()
-                        p = ant.p
-                        ant.move(next)
-                        move("dirt", next, p)
+                        console.log("found other order")
+                        let result = this.popTask()
+                        let type = getType(next)
+                        this.findTarget(type, next)
 
-                        // findBuildPlan
                     }
                     if (other = targets[["worker", next]]) {
+                        // TODO: rewrite using popTask/giveTask
                         // append remainder of plan to its plan, switch ant with dirt, find new plan
                         assert(other.plan && other.plan[0] == next)
                         // ant.plan: last elt is next, first elt is original target
@@ -205,8 +256,11 @@ queen = new Ant([0, 0])
 queen.queen = false // TODO:make this matter and change it to true
 
 function sel(p) {
-    orders["worker"][p] = true
+    if (!targets[["worker", p]] && isDirt(p)) {
+        orders["worker"][p] = true
+    }
     console.log(p)
+    redraw()
 }
 //put("water", [10, 2])
 //water.push([10, 2])
@@ -219,6 +273,12 @@ function isDirt(p) {
     return (p[1] < 0 && !map[p]?.includes("tunnel")
         || map[p]?.includes("dirt"))
 }
+
+function isAir(p) {
+    return (p[1] >= 0 && !map[p]?.includes("tunnel") && !map[p]?.includes("dirt")
+        || map[p]?.includes("air"))
+}
+
 function getType(p) {
     assert(isDirt(p))
     return "dirt"
@@ -230,7 +290,7 @@ function hasAnt(p) {
 
 function canWalk(p) {
     return !isDirt(p) && !hasAnt(p) &&
-        (map[p]?.includes("tunnel") || isDirt([p[0], p[1] - 1]) || isDirt([p[0] - 1, p[1]] - 1) || isDirt([p[0] + 1, p[1]] - 1))
+        (map[p]?.includes("tunnel") || isDirt([p[0], p[1] - 1]) || isDirt([p[0] - 1, p[1] - 1]) || isDirt([p[0] + 1, p[1] - 1]))
 }
 function canBreathe(p) {
     for (let dx = -1; dx <= 1; dx++)for (let dy = -1; dy <= 1; dy++) {
@@ -250,17 +310,31 @@ function willBeDirt(p) {
 
 function willWalk(p) {
     return (!isDirt(p) || targets[["worker", p]] || draggers[["dirt", p]]) &&
-        (map[p]?.includes("tunnel") || willBeDirt([p[0], p[1] - 1]) || willBeDirt([p[0] - 1, p[1]] - 1) || willBeDirt([p[0] + 1, p[1]] - 1))
+        (map[p]?.includes("tunnel") || willBeDirt([p[0], p[1] - 1]) || willBeDirt([p[0] - 1, p[1] - 1]) || willBeDirt([p[0] + 1, p[1] - 1]))
 }
 
 
 
 function take(thing, src) {
     let l = map[src]
-    if (l?.length === 1) delete map[src]
+    if (thing == "dirt" && isDirt(src)) {
+        put("tunnel", src)
+        if (!l?.includes(thing)) return
+    }
+    assert(l.includes(thing))
+    if (l.length === 1) delete map[src]
     else l.splice(l.indexOf(thing), 1)
 }
 function put(thing, dst) {
+    if (thing == "dirt") {
+        if (isAir(dst)) {
+            thing = "tunnel"
+            console.log("placed tunnel")
+        }
+        else if (map[dst]?.includes("tunnel")) {
+            take("tunnel", dst)
+        }
+    }
     if (map[dst]) map[dst].push(thing)
     else map[dst] = [thing]
 }
@@ -342,7 +416,14 @@ function tick() {
     }
     draw()
 }
-setInterval(tick, 2000)
+
+tickInterval = null
+function setTickrate(rate) {
+    clearInterval(tickInterval)
+    setInterval(tick, rate)
+}
+
+setTickrate(200)
 
 function assert(c) {
     if (!c) {

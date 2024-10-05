@@ -1,19 +1,29 @@
 
 SQSZ = 16
 
+DIRT_COL = "Sienna" // did you know sienna is a kind of clay?
+TUNNEL_COL = "sandyBrown"
+
 function draw() {
     ctx.fillStyle = "skyblue" // good color for the sky
     ctx.fillRect(SQSZ * minx, 0, SQSZ * (maxx - minx + 1), SQSZ * (maxy + 1))
-    ctx.fillStyle = "Sienna" // did you know sienna is a kind of clay?
+    ctx.fillStyle = DIRT_COL
     ctx.fillRect(SQSZ * minx, SQSZ * miny, SQSZ * (maxx - minx + 1), -SQSZ * miny)
-    ctx.fillStyle = "sandyBrown"
-    for (let p of tunnels) {
-        ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+
+    for (let p in map) {
+        elt = map[p]
+        p = p.split(",")
+        if (elt?.includes("tunnel")) {
+            ctx.fillStyle = TUNNEL_COL
+            ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+        }
+        if (elt?.includes("dirt")) {
+            ctx.fillStyle = DIRT_COL
+            ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+        }
+
     }
-    ctx.fillStyle = "Sienna" // did you know sienna is a kind of clay?
-    for (let p of dirts) {
-        ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
-    }
+
     ctx.fillStyle = "mediumpurple"
     for (let ant of ants) {
         ctx.fillRect(ant.p[0] * SQSZ, ant.p[1] * SQSZ, SQSZ, SQSZ)
@@ -23,9 +33,16 @@ function draw() {
         ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
     }
     ctx.fillStyle = "#8888"
-    for (let p in orders["worker"]) {
+    for (let p in orders["worker"]) if (orders["worker"][p]) {
         p = p.split(",")
         ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+    }
+    ctx.fillStyle = "#AAA8"
+    for (let wp in targets) if (targets[wp]) {
+        wp = wp.split(",")
+        if (wp[0] = "worker") {
+            ctx.fillRect(SQSZ * wp[1], SQSZ * wp[2], SQSZ, SQSZ)
+        }
     }
 }
 
