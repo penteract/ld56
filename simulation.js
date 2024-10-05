@@ -27,10 +27,10 @@ class Ant {
 
     }
     move(dst) {
-        maxx = Math.max(maxx,this.p[0]+Margin)
-        minx = Math.min(minx,this.p[0]-Margin)
-        maxy = Math.max(maxy,this.p[1]+Margin)
-        miny = Math.min(miny,this.p[1]-Margin)
+        maxx = Math.max(maxx, this.p[0] + Margin)
+        minx = Math.min(minx, this.p[0] - Margin)
+        maxy = Math.max(maxy, this.p[1] + Margin)
+        miny = Math.min(miny, this.p[1] - Margin)
         move(this, this.p, dst)
         this.p = dst
     }
@@ -44,7 +44,7 @@ class Ant {
         }
 
         function validOrder(q) {
-            return ordrs[q] || (lookForAir && isAir(q))
+            return ordrs[q] || (lookForAir && isAir(q) && !targets[[type, q]])
         }
 
         // This is a heap because that might help with efficiency if we try to reuse it
@@ -105,7 +105,7 @@ class Ant {
         }
         assert(targets[task0] === this)
         delete targets[task0]
-        assert(orders[type][target] ?? 0 < maxOrders(type)) // assume we cannot place an order on an existing order (including if the existing order has started to be executed)
+        assert(orders[type][target]) // assume we cannot place an order on an existing order (including if the existing order has started to be executed)
         this.plan = null
         if (plan.length === 0) {
             return "finished"
@@ -114,7 +114,7 @@ class Ant {
             if (type === "worker") { return ["finished", plan[0]] }
             else { return "finished" }
         }
-        orders[type][target] = (orders[type][target] ?? 0) + 1
+        orders[type][target] = true
         return [type, plan]
     }
 
@@ -124,8 +124,7 @@ class Ant {
         let [type, plan] = task
         let target = plan[0]
         let task0 = [type, target]
-        orders[type][target] -= 1
-        if (!orders[type][target]) delete orders[type][target]
+        delete orders[type][target]
         targets[task0] = this
         this.plan = plan
         if (type !== "worker") {
@@ -135,7 +134,9 @@ class Ant {
         }
     }
 
-    doDrag(src, dest) {
+    doDrag() {
+        let src = this.plan.pop()
+        let dest = this.plan[this.plan.length - 1]
         console.log(draggers)
         assert(draggers[[this.dragging, src]] === this)
         delete draggers[[this.dragging, src]]
@@ -174,9 +175,7 @@ class Ant {
             let cur = this.plan[l - 1]
             let next = this.plan[l - 2]
             if (canWalk(next)) {
-                this.plan.pop()
-                this.doDrag(cur, next)
-
+                this.doDrag()
                 return
             }
             else {
@@ -190,13 +189,38 @@ class Ant {
                 // - ???
                 if (other = hasAnt(next)) {
                     if (other === this) {
-                        this.plan.pop()
-                        this.doDrag(cur, next)
+                        this.doDrag()
                         return
                     }
                     else {
                         // TODO
-                        assert(false)
+                        // other ant in the way of our dragging
+                        // - if it has no task or is a worker, switch?
+                        // - if its dragging... probably we wait. maybe a chance to hand off our plan and abandon theirs. 
+                        if (!other.dragging) {
+                            console.log("ant in way of dragging - swapping tasks")
+                            let myTask = this.popTask()
+                            let otherTask = other.popTask()
+
+                            // my next intended step (for the pushed dirt) is their current position
+                            // they want to carry the same path (and their first step would be to swap)
+                            // the path of the block hasn't changed, so we don't modify the task
+                            other.giveTask(myTask)
+
+                            if (!otherTask || otherTask === "finished" || otherTask[0] === "finished") return
+
+                            let [otherType, otherPlan] = otherTask
+                            assert(otherType === "worker")
+
+                            otherPlan = concatPaths(otherPlan, [other.p, next, this.p])
+                            otherPlan.pop()
+
+                            this.giveTask([otherType, otherPlan])
+
+                        }
+                        else {
+                            assert(false)
+                        }
                     }
                 }
                 else if (isAir(next)) {
@@ -231,57 +255,113 @@ class Ant {
                         this.findTarget(type, next)
 
                     }
-                    if (other = targets[["worker", next]]) {
+                    else if (other = targets[["worker", next]]) {
                         // TODO: rewrite using popTask/giveTask
                         // append remainder of plan to its plan, switch ant with dirt, find new plan
-                        assert(other.plan && other.plan[0] == next)
-                        // ant.plan: last elt is next, first elt is original target
-                        // other.plan: last elt is its next, first elt is its target which is next
-                        this.plan.pop()
-                        other.plan = ant.plan.concat(other.plan)
 
-                        this.plan.pop()
-                        p = ant.p
-                        ant.move(next)
-                        move("dirt", next, p)
+                        console.log("found another targeted block - handing off plan")
 
-                        // findBuildPlan
+                        let [otherType, otherPlan] = other.popTask()
+                        assert(otherType === "worker" && otherPlan[0] + "" === next + "")
+
+                        let [myType, myPlan] = this.popTask()
+                        assert(myType === "worker")
+
+                        otherPlan = concatPaths(myPlan, otherPlan)
+                        other.giveTask([myType, otherPlan])
+
+                        let newType = getType(next)
+                        this.findTarget(newType, next)
                     }
-                    if (draggers[["dirt", next]]) {
-                        // TODO
+                    else if (other = draggers[["dirt", next]]) {
+                        // dragged dirt is in the way. relevant cases are if i'm in their way or not.
+                        let otherNext = other.plan[other.plan.length - 2]
+                        if (otherNext + "" === this.p + "") {
+                            console.log("in the way of dragged path while not dragging - switching and performing a step")
+                            let myTask = this.popTask()
+                            let otherTask = other.popTask()
+                            this.giveTask(otherTask) // don't need to modify this path (now), block path hasn;t changed 
+                            this.doDrag(next, otherNext)
+
+                            if (myTask[1][myTask[1].length - 2] + "" === other.p + "") {
+                                console.log("simplifying path")
+                                myTask[1].length -= 2
+                            }
+                            other.giveTask(myTask)
+                        }
+                        else {
+                            // dragged block in our way, we are not in its way. seems sensible to wait (switching puts them in our situation again)
+                            // may consider probibalistic switching 
+                            console.log("dragged block in our way, we are not in its way - idling")
+                        }
+                    }
+                    else {
                         assert(false)
                     }
                 }
                 else if (other = hasAnt(next)) {
                     if (!other.dragging) {
+                        console.log("ant in way - swapping tasks")
+                        let myTask = this.popTask()
+                        let otherTask = other.popTask()
 
+                        let [myType, myPlan] = myTask
+                        myPlan.pop() // my plan's next intended step is their current step
+
+                        other.giveTask([myType, myPlan])
+
+                        if (!otherTask || otherTask === "finished" || otherTask[0] === "finished") return
+
+                        let [otherType, otherPlan] = otherTask
+                        assert(otherType === "worker")
+                        otherPlan = concatPaths(otherPlan, [other.p, this.p])
+                        otherPlan.pop()
+
+                        this.giveTask([otherType, otherPlan])
+
+                    }
+                    else {
+                        // im not dragging, they are
+                        // im not in their way due to parity
+                        // doing nothing seems like the sensible option here 
+                        console.log("dragger in the way - idling")
+                        return
                     }
                 }
             }
         }
     }
-
 }
 
-function maxOrders(type) {
-    if (type == "dirt") return 2
-    else return 1
+function concatPaths(p1, p2) {
+    let res = []
+    let idx
+    for (let p of p1) {
+        res.push(p)
+        if ((idx = p2.indexOf(p)) > -1) {
+            res.push(...p2.slice(idx + 1))
+            return res
+        }
+    }
+    res.push(...p2)
+    return res
 }
 
 
 queen = new Ant([0, 0])
+otherAnt = new Ant([1, 0])
 queen.queen = false // TODO:make this matter and change it to true
 
 function sel(p) {
     if (!targets[["worker", p]] && isDirt(p)) {
         orders["worker"][p] = true
     }
-    if (isAir(p) && ((orders["dirt"][p] ?? 0) + !!targets[["dirt", p]] < maxOrders("dirt"))) {
-        orders["dirt"][p] = (orders["dirt"][p] ?? 0) + 1
+    if (isAir(p) && !targets[["dirt", p]]) {
+        orders["dirt"][p] = true
     }
     if (map[p]?.includes("tunnel") && !targets[["dirt", p]]) {
         assert(!isDirt(p))
-        orders["dirt"][p] = 1
+        orders["dirt"][p] = true
     }
     console.log(p)
     redraw()
