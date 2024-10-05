@@ -129,10 +129,10 @@ class Ant {
             if (type === "worker") { return ["finished", plan[0]] }
             else { return "finished" }
         }
-        if(!finishing && type!=="worker"){
+        /*if(!finishing && type!=="worker"){
             if(orders[type][dragPos]){console.warn("didn't expect an order to already be there")}
             orders[type][dragPos] = true
-        }
+        }*/
         orders[type][target] = true
         return [type, plan]
     }
@@ -151,8 +151,8 @@ class Ant {
             let draggedPos = plan[plan.length - 1]
             assert(draggers[[type, draggedPos]] === undefined)
             draggers[[type, draggedPos]] = this
-              // orders[type][target] may not have been true. That's not a problem
-            delete orders[type][draggedPos]
+              // orders["worker"][draggedPos] may not have been true. That's not a problem
+            delete orders["worker"][draggedPos]
         }
     }
 
@@ -254,6 +254,7 @@ class Ant {
                     }
                     else{
                         if ((other = targets[["worker", next]]) || orders["worker"][next]) {
+                            console.log("encountered dirt, switching to drag it")
                             let origPlan = this.plan
                             let origPos = this.p
                             origPlan.push(origPos)
@@ -271,13 +272,14 @@ class Ant {
                                         concatPaths([origPos, this.p],otherPlan)
                                         ])
                                 }
-                            } else {
-
+                            } else if (oldTask) { // order the dirt we dropped to be collected
+                                orders["worker"][origPos] = true
                             }
                             this.giveTask(["dirt" ,origPlan])
                         }
                         else{
                             // wait for next turn and recalculate path around obstacle then
+                            console.log("encountered dirt, rerouting")
                             let t = this.popTask()
                             if(t!="finished" && t[0]!="finished"){
                                 this.giveTask(["worker",[t[1][t[1].length-1]]])
@@ -320,13 +322,15 @@ class Ant {
                         console.log("found another targeted block - handing off plan")
 
                         let [otherType, otherPlan] = other.popTask()
-                        assert(otherType === "worker" && otherPlan[0] + "" === next + "")
+                        assert(otherType === "finished" && otherPlan +"" === next+""
+                            || otherType === "worker" && otherPlan[0] + "" === next + "")
 
-                        let [myType, myPlan] = this.popTask()
+                        let [myType, myPlan] = this.popTask() // this cannot be finished because next is someone else's target
                         assert(myType === "worker")
-
-                        otherPlan = concatPaths(myPlan, otherPlan)
-                        other.giveTask([myType, otherPlan])
+                        if(otherType!=="finished"){
+                            otherPlan = concatPaths(myPlan, otherPlan)
+                            other.giveTask([myType, otherPlan])
+                        }
 
                         // give task to properly clear the order
                         this.giveTask(["worker", [next]])
