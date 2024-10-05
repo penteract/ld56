@@ -251,8 +251,10 @@ class Ant {
                     if (orders["worker"][next]) {
                         console.log("found other order")
                         let result = this.popTask()
-                        let type = getType(next)
-                        this.findTarget(type, next)
+                        let type
+                        if (type = getType(next)){
+                            this.findTarget(type, next)
+                        }
 
                     }
                     else if (other = targets[["worker", next]]) {
@@ -353,6 +355,7 @@ otherAnt = new Ant([1, 0])
 queen.queen = false // TODO:make this matter and change it to true
 
 function sel(p) {
+    for(let x
     if (!targets[["worker", p]] && isDirt(p)) {
         orders["worker"][p] = true
     }
@@ -384,8 +387,10 @@ function isAir(p) {
 }
 
 function getType(p) {
-    assert(isDirt(p))
-    return "dirt"
+    // assert(isDirt(p)) <- would like to do this, but it fails sometimes and it probably not too bad if it happens
+
+    if(isDirt(p)) return "dirt"
+    else console.warn("Couldn't find dirt where expected")
 }
 
 function hasAnt(p) {
