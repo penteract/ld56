@@ -15,7 +15,9 @@ function draw(){
     ctx.fillRect(SQSZ*p[0],SQSZ*p[1],SQSZ,SQSZ)
   }
   ctx.fillStyle="mediumpurple"
-  ctx.fillRect(0,0,SQSZ,SQSZ)
+  for(let ant of ants){
+    ctx.fillRect(ant.p[0]*SQSZ,ant.p[1]*SQSZ,SQSZ,SQSZ)
+  }
   ctx.fillStyle="#00F8"
   for (let p of water){
     ctx.fillRect(SQSZ*p[0],SQSZ*p[1],SQSZ,SQSZ)

@@ -1,13 +1,21 @@
+const ants = []
 class Ant{
-  constructor(){
+  constructor(p){
       this.queen=false
       this.plan=null
+      this.dragging = undefined // [thing,position]
+      this.idx = ants.length
+      this.p=p
+      ants.push(this)
+
+  }
+  move(dst){
+    move(this,this.p,dst)
   }
 }
 
-queen = new Ant()
+queen = new Ant([1,1])
 queen.queen=true
-let ants = [queen]
 let map = {"0,-1":["tunnel"]}  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
 let water = [] //[[1,-2]] // immutable?
 let tunnels = [[0,-1]]
@@ -15,6 +23,7 @@ let dirts = []
 // Orders
 let toDig = []
 let toBuild = []
+let draggers = {} // tracks if anyone is dragging a particular thing {[thing,postion]:Ant}
 
 put("water",[10,2])
 water.push([10,2])
@@ -29,7 +38,6 @@ function isDirt(p){
 }
 function canWalk(p){
   return !isDirt(p) && (p.includes("tunnel")||isDirt([p[0],p[1]-1]))
-
   (p[1]<0 && !map[p]?.includes("tunnel")
           || map[p]?.includes("dirt") )
 }
@@ -92,6 +100,14 @@ function tick(){
     newWater.push(p)
   }
   water=newWater
+
+  // Search for tasks available
+  let frontier = []
+  for(let ant of ants){
+    if(ant.plan){ // Execute plan
+      //ant.followplan()
+    }
+  }
   draw()
 }
 setInterval(tick,100)

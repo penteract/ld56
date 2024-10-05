@@ -10,17 +10,15 @@ function scl(x,y,factor){
   if (factor<0.5)factor=0.5;
   let oldscale=scale
   scale*=factor
-  scale = Math.round(scale*16)/16
-  if(scale==oldscale && factor<0) scale -= 1/16
-  else if(scale==oldscale && factor>0) scale += 1/16
-  if(scale<1)scale=1;
-  if(scale>1000)scale=1000;
+  scale = Math.round(scale*SQSZ)/SQSZ
+  if(scale==oldscale && factor<0) scale -= 1/SQSZ
+  else if(scale==oldscale && factor>0) scale += 1/SQSZ
+  if(scale<1/8)scale=1/8;
+  if(scale>100)scale=100;
   let sr=scale/oldscale
-  //xoff = (x-xoff)*(1-sr)
   // This took far too long
   xoff = Math.round((x - (x-xoff)*sr))
   yoff = Math.round((y - (y-yoff)*sr))
-  //yoff += y*(oldscale-scale)
   redraw()
 }
 function whl(e){
