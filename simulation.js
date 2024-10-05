@@ -14,15 +14,18 @@ class Ant{
   }
 }
 
-queen = new Ant([1,1])
+queen = new Ant([0,0])
 queen.queen=true
 let map = {"0,-1":["tunnel"]}  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
 let water = [] //[[1,-2]] // immutable?
 let tunnels = [[0,-1]]
 let dirts = []
+
 // Orders
-let toDig = []
-let toBuild = []
+let toDig = new Set()
+
+let toBuild = new Set()
+
 let draggers = {} // tracks if anyone is dragging a particular thing {[thing,postion]:Ant}
 
 put("water",[10,2])
@@ -85,7 +88,12 @@ function tryMoveW(src,dst,r,l){
   return true
 }
 
+tickCount = 0
+
 function tick(){
+  tickCount += 1
+  RainProb = (1+Math.sin(tickCount/100))**2 *0.01
+  // Should this vary by x coordinate? That would mean you'd have to deal with floods coming from the sides, as well as just rain from above
   let newWater = []
   for(let x=minx;x<=maxx;x++){
     // Add rain
@@ -99,7 +107,10 @@ function tick(){
   for(let p of water){
     let r = rand() // This means that moving dirt to dirt isn't slower than air to dirt
                   // but also that water never moves sideways through dirt, which we might want to change
-    if(isDirt(p) && r>MudProb) {newWater.push(p);continue}
+    if(isDirt(p) && r>MudProb) {
+      newWater.push(p);
+      continue
+    }
     if (tryMoveW(p,add(p,[0,-1]),r,newWater)) {continue}
     let sr = rand()
     if (sr<SidewaysProb){
@@ -113,10 +124,14 @@ function tick(){
   water=newWater
 
   // Search for tasks available
+  // tracking ants that have been encountered during the search might be able to speed things up
+  // (particularly to avoid searching a large empty region multiple times)
   let frontier = []
   for(let ant of ants){
     if(ant.plan){ // Execute plan
       //ant.followplan()
+    }
+    else{
     }
   }
   draw()
