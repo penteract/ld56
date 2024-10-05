@@ -1,3 +1,18 @@
+// Invariants:
+
+// for each ant:
+//   if ant.plan:
+//     tasktype = ant.dragging ?? "worker"
+//     targets[tasktype, ant.plan[0]] === ant
+
+// for each position p:
+//   if orders[tasktype,p]:
+//     not targets[tasktype,p]
+//   if orders["workers",p]:
+//     isDirt(p)
+
+
+
 let map = { "0,-1": ["tunnel"] }  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
 let water = [] //[[1,-2]] // immutable?
 let tunnels = [[0, -1]]
