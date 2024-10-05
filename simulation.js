@@ -242,7 +242,7 @@ class Ant {
                     this.doDrag()
                 }
                 else if (isDirt(next)) {
-                    if (other = draggers[[dirt,next]]){
+                    if (other = draggers[["dirt",next]]){
                         assert(false)
                     }
                     else{
@@ -385,6 +385,12 @@ class Ant {
                         return
                     }
                 }
+                else{
+                    if(!willWalk(next) || rand()<0.1){
+                        this.popPlan()
+                    }
+                    else{} // wait
+                }
             }
         }
     }
@@ -468,7 +474,7 @@ function canBreathe(p) {
 function willBeDirt(p) {
     return (p[1] < 0 && !map[p]?.includes("tunnel")
         || map[p]?.includes("dirt")
-        || targets[["dirt", p]])
+        || (targets[["dirt", p]] && map[p]?.includes("tunnel")))
 }
 
 function willWalk(p) {
