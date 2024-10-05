@@ -300,7 +300,11 @@ class Ant {
                         }
                     }
                     else {
-                        assert(false)
+                        console.log("placed block in way - swapping")
+                        move("dirt", next, this.p)
+                        this.move(next)
+                        this.plan.pop()
+                        return
                     }
                 }
                 else if (other = hasAnt(next)) {
@@ -357,7 +361,7 @@ otherAnt = new Ant([1, 0])
 queen.queen = false // TODO:make this matter and change it to true
 
 function sel(p) {
-    if (!targets[["worker", p]] && isDirt(p)) {
+    if (!targets[["worker", p]] && isDirt(p) && !draggers[["dirt", p]]) {
         orders["worker"][p] = true
     }
     if (isAir(p) && !targets[["dirt", p]]) {
