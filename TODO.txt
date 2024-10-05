@@ -1,0 +1,13 @@
+Clicking
+  // just do it already
+
+Ant AI
+  search
+  collision behavior
+  Give each ant its own colour to make it easier to see what's happening if lots of ants are bunched up
+
+
+Fancier graphics
+  I feel like this is optional. Animating water movement would be quite tricky
+
+

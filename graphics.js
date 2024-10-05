@@ -22,6 +22,11 @@ function draw(){
   for (let p of water){
     ctx.fillRect(SQSZ*p[0],SQSZ*p[1],SQSZ,SQSZ)
   }
+  ctx.fillStyle="#8888"
+  for (let p in orders["worker"]){
+    p = p.split(",")
+    ctx.fillRect(SQSZ*p[0],SQSZ*p[1],SQSZ,SQSZ)
+  }
 }
 
 
@@ -40,4 +45,3 @@ function redraw(){
   ctx.setTransform(scale,0,0,-scale,xoff,yoff) // I think setTransform is less likely to leave gaps between squares than mucking with coordinates
   draw()
 }
-

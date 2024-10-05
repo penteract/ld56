@@ -73,3 +73,18 @@ document.addEventListener('keydown', (event) => {
 
 window.addEventListener('resize', resizeCanvas, false);
 resizeCanvas();
+
+function clk(x,y){
+  sel ([ Math.floor((x - xoff) / scale / SQSZ)
+       , Math.floor(- (y - yoff) / scale / SQSZ)])
+}
+
+// Input
+canvas.addEventListener("mousedown",function(e){
+  if(e.button===0) {clk(e.clientX,e.clientY)}
+})
+
+canvas.addEventListener("mousemove",function(e){
+  //console.log(e)
+  if(e.buttons===1){clk(e.clientX,e.clientY)}
+})

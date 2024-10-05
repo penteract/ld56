@@ -34,6 +34,9 @@ Decide based on coords whether to generate pfeature; store partial features so c
 
 
 
+Food could grow on the boundary between dirt and air , perhaps fed by water?
+you're then incentivized to build a structure that's good for agriculture :)
+
 
 Technical questions:
 svg vs canvas:
