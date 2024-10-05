@@ -48,14 +48,12 @@ function isDirt(p){
 }
 function canWalk(p){
   return !isDirt(p) &&
-    (map[p].includes("tunnel")||isDirt([p[0],p[1]-1])||isDirt([p[0]-1,p[1]]-1)||isDirt([p[0]+1,p[1]]-1))
-  (p[1]<0 && !map[p]?.includes("tunnel")
-          || map[p]?.includes("dirt") )
+    (map[p]?.includes("tunnel")||isDirt([p[0],p[1]-1])||isDirt([p[0]-1,p[1]]-1)||isDirt([p[0]+1,p[1]]-1))
 }
 function canBreathe(p){
   for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
     let q = add(p,[dx,dy])
-    if (!isDirt(q) && !map[q].includes("water")){
+    if (!isDirt(q) && !map[q]?.includes("water")){
       return true
     }
   }
@@ -70,9 +68,7 @@ function willBeDirt(p){
 
 function willWalk(p){
   return (!isDirt(p) || targets[["worker",p]] || draggers[["dirt",p]] ) &&
-    (map[p].includes("tunnel")||willBeDirt([p[0],p[1]-1])||willBeDirt([p[0]-1,p[1]]-1)||willBeDirt([p[0]+1,p[1]]-1))
-  (p[1]<0 && !map[p]?.includes("tunnel")
-          || map[p]?.includes("dirt") )
+    (map[p]?.includes("tunnel")||willBeDirt([p[0],p[1]-1])||willBeDirt([p[0]-1,p[1]]-1)||willBeDirt([p[0]+1,p[1]]-1))
 }
 
 
@@ -156,27 +152,33 @@ function tick(){
 
   for(let ant of ants){
     if(!ant.plan){
-      continue
       let ordrs = orders["worker"]// TODO: check if empty
 
       // This is a heap because that might help with efficiency if we try to reuse it
       // might give suboptimal paths, but it's better than flood filling the map for every ant.
       // We probably need a path fixer that removes loops
       let heap = [[0,[ant.p,null]]]
-      let seen = new Set()
-      seen.add(heap[0][1][0])
+      let seen = {}
+      seen[heap[0][1][0]]=true
       let found = undefined
       while(heap.length && !found){
-        let [d,path] = heappop(heap)
-        for(let q in neighbs(path[0])) if(!seen.has(q) && canWalk(q)) {
-          seen.add(q)
+        let r= heappop(heap)
+        //console.log(r)
+        let [d,path] = r
+        for(let q of neighbs(path[0])) {
+          //console.log("v")
+        if(!seen[q] && willWalk(q) && inBounds(q) || ordrs[q]) {
+          //console.log("a")
+          seen[q]=true
           if(ordrs[q]){
             found = [q,path]
           }
           heappush(heap,d+1,[q,path])
           // Could use heuristics to avoid busy areas, increase d by 2 if the cell is occupied by another ant
         }
+        }
       }
+      console.log(Object.keys(seen).length, found)
     }
     if(ant.plan){ // Execute plan
       //ant.followplan()
@@ -184,7 +186,7 @@ function tick(){
   }
   draw()
 }
-setInterval(tick,100)
+setInterval(tick,2000)
 
 
 const Margin = 20 // Changing Margin has an effect on water throughput

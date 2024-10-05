@@ -3,7 +3,7 @@
 
 function heappush(h,k,v){
   let l = h.length
-  h.push(l)
+  h.push([k,v])
   heapfix(h,l)
 }
 
@@ -25,7 +25,11 @@ function heappop(h){
     h[k] = h[k*2+1]
     k = k*2+1
   }
-  heapfix(h,k)
+  v = h.pop()
+  if(h.length!=k){
+    h[k]=v
+    heapfix(h,k)
+  }
   return res
 }
 
