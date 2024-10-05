@@ -105,7 +105,7 @@ class Ant {
         }
         assert(targets[task0] === this)
         delete targets[task0]
-        assert(orders[type][target]) // assume we cannot place an order on an existing order (including if the existing order has started to be executed)
+        assert(!orders[type][target]) // assume we cannot place an order on an existing order (including if the existing order has started to be executed)
         this.plan = null
         if (plan.length === 0) {
             return "finished"
@@ -252,7 +252,7 @@ class Ant {
                         console.log("found other order")
                         let result = this.popTask()
                         let type
-                        if (type = getType(next)){
+                        if (type = getType(next)) {
                             this.findTarget(type, next)
                         }
 
@@ -388,7 +388,7 @@ function isAir(p) {
 function getType(p) {
     // assert(isDirt(p)) <- would like to do this, but it fails sometimes and it probably not too bad if it happens
 
-    if(isDirt(p)) return "dirt"
+    if (isDirt(p)) return "dirt"
     else console.warn("Couldn't find dirt where expected")
 }
 
