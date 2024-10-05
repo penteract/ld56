@@ -179,7 +179,7 @@ class Ant {
     }
 
     followPlan() {
-        console.log("following plan", this.plan, this.dragging)
+        console.info("following plan", this.plan, this.dragging)
         let ant = this
         let other
         let l = this.plan.length
@@ -225,7 +225,7 @@ class Ant {
                         // - if it has no task or is a worker, switch?
                         // - if its dragging... probably we wait. maybe a chance to hand off our plan and abandon theirs. 
                         if (!other.dragging) {
-                            console.log("ant in way of dragging - swapping tasks")
+                            console.info("ant in way of dragging - swapping tasks")
                             let myTask = this.popTask()
                             let otherTask = other.popTask()
 
@@ -260,7 +260,7 @@ class Ant {
                     }
                     else {
                         if ((other = targets[["worker", next]]) || orders["worker"][next]) {
-                            console.log("encountered dirt, switching to drag it")
+                            console.info("encountered dirt, switching to drag it")
                             let origPlan = this.plan
                             let origPos = this.p
                             origPlan.push(origPos)
@@ -294,7 +294,7 @@ class Ant {
                         }
                         else {
                             // wait for next turn and recalculate path around obstacle then
-                            console.log("encountered dirt, rerouting")
+                            console.info("encountered dirt, rerouting")
                             let t = this.popTask()
                             if (t != "finished" && t[0] != "finished") {
                                 this.giveTask(["worker", [t[1][t[1].length - 1]]])
@@ -329,7 +329,7 @@ class Ant {
                     // dragged: switch path or wait 
                     // built: swap
                     if (orders["worker"][next]) {
-                        console.log("found other order")
+                        console.info("found other order")
                         let result = this.popTask()
                         let type
                         if (type = getType(next)) {
@@ -340,7 +340,7 @@ class Ant {
                     else if (other = targets[["worker", next]]) {
                         // append remainder of plan to its plan, switch ant with dirt, find new plan
 
-                        console.log("found another targeted block - handing off plan")
+                        console.info("found another targeted block - handing off plan")
 
                         let [otherType, otherPlan] = other.popTask()
                         assert(otherType === "finished" && otherPlan + "" === next + ""
@@ -364,7 +364,7 @@ class Ant {
                         // dragged dirt is in the way. relevant cases are if i'm in their way or not.
                         let otherNext = other.plan[other.plan.length - 2]
                         if (otherNext + "" === this.p + "") {
-                            console.log("in the way of dragged path while not dragging - switching and performing a step")
+                            console.info("in the way of dragged path while not dragging - switching and performing a step")
                             let myTask = this.popTask()
                             let otherTask = other.popTask()
                             this.giveTask(otherTask) // don't need to modify this path (now), block path hasn;t changed 
@@ -379,11 +379,11 @@ class Ant {
                         else {
                             // dragged block in our way, we are not in its way. seems sensible to wait (switching puts them in our situation again)
                             // may consider probibalistic switching 
-                            console.log("dragged block in our way, we are not in its way - idling")
+                            console.info("dragged block in our way, we are not in its way - idling")
                         }
                     }
                     else {
-                        console.log("placed block in way - swapping")
+                        console.info("placed block in way - swapping")
                         move("dirt", next, this.p)
                         this.move(next)
                         this.plan.pop()
@@ -392,7 +392,7 @@ class Ant {
                 }
                 else if (other = hasAnt(next)) {
                     if (!other.dragging) {
-                        console.log("ant in way - swapping tasks")
+                        console.info("ant in way - swapping tasks")
                         let myTask = this.popTask()
                         let otherTask = other.popTask()
 
@@ -415,7 +415,7 @@ class Ant {
                         // im not dragging, they are
                         // im not in their way due to parity
                         // doing nothing seems like the sensible option here 
-                        console.log("dragger in the way - idling")
+                        console.info("dragger in the way - idling")
                         return
                     }
                 }
@@ -423,9 +423,12 @@ class Ant {
                     // we can't walk to where we want, but it's not because of dirt or ant. probably bc we pathed assuming dirt will be placed that has not yet arrived.
                     // sensible to abandon plan here; or wait.
                     if (!willWalk(next) || rand() < 0.1) {
+                        console.info("can't advance, abandoning")
                         this.popPlan()
                     }
-                    else { } // wait
+                    else {
+                        console.info("can't advance right now, waiting")
+                    } // wait
                 }
             }
         }
