@@ -3,7 +3,7 @@ SQSZ = 16
 
 function draw(){
   ctx.fillStyle="skyblue" // good color for the sky
-  ctx.fillRect(SQSZ*minx,0,SQSZ*(maxx-minx+1),SQSZ*maxy)
+  ctx.fillRect(SQSZ*minx,0,SQSZ*(maxx-minx+1),SQSZ*(maxy+1))
   ctx.fillStyle="Sienna" // did you know sienna is a kind of clay?
   ctx.fillRect(SQSZ*minx,SQSZ*miny,SQSZ*(maxx-minx+1),-SQSZ*miny)
   ctx.fillStyle="sandyBrown"

@@ -67,8 +67,10 @@ function move(thing,src,dst){
   put(thing,dst)
 }
 
-const MudProb = 0.1
-const SidewaysProb = 0.3
+const rand = Math.random
+let MudProb = 0.1 // saturated mud accepts rain much more slowly. With MudProb=0.1, the maximum flow through dirt appears to be around 0.03
+let SidewaysProb = 0.3
+let RainProb = 0.03
 
 
 function tryMoveW(src,dst,r,l){
@@ -82,9 +84,18 @@ function tryMoveW(src,dst,r,l){
   }
   return true
 }
-const rand = Math.random
+
 function tick(){
   let newWater = []
+  for(let x=minx;x<=maxx;x++){
+    // Add rain
+    // doing this before water movement means new water is at the start of the list, so bubbles don't move up instantly
+    let p = [x,maxy];
+    if (!map[p]?.includes("water") && rand()<RainProb){
+       put("water",p)
+       newWater.push(p)
+    }
+  }
   for(let p of water){
     let r = rand() // This means that moving dirt to dirt isn't slower than air to dirt
                   // but also that water never moves sideways through dirt, which we might want to change
@@ -113,10 +124,12 @@ function tick(){
 setInterval(tick,100)
 
 
-let maxx=20
-let minx=-20
-let maxy=20
-let miny=-20
+const Margin = 20
+
+let maxx=Margin
+let minx=-Margin
+let maxy=Margin
+let miny=-Margin
 
 function inBounds(p){
   ;let [x,y] = p
