@@ -31,18 +31,16 @@ class Ant {
         this.p = dst
     }
 
-    findTarget(type, start) {
+    findTarget(type, start, lookForAir = false) {
         // console.log(this, type, start)
         let ordrs = orders[type]
-        if (Object.keys(ordrs).length === 0 && type !== "dirt") return
+        if (Object.keys(ordrs).length === 0) {
+            if (type == "dirt") lookForAir = true
+            else return
+        }
 
         function validOrder(q) {
-            if (ordrs[q]) return true
-            if (Object.keys(ordrs).length === 0 && type === "dirt") {
-                return isAir(q)
-            }
-            if (type == "dirt") console.log(q)
-            return false
+            return ordrs[q] || (lookForAir && isAir(q))
         }
 
         // This is a heap because that might help with efficiency if we try to reuse it
@@ -81,6 +79,9 @@ class Ant {
             if (type === "worker") { plan.pop() }
             this.giveTask([type, plan])
         }
+        else if (type == "dirt" && !lookForAir) {
+            this.findTarget(type, start, true)
+        }
         // targets[["worker", this.plan[0]]] = this
         // this.dragging = undefined
     }
@@ -100,7 +101,7 @@ class Ant {
         }
         assert(targets[task0] === this)
         delete targets[task0]
-        assert(!orders[type][target]) // assume we cannot place an order on an existing order (including if the existing order has started to be executed)
+        assert(orders[type][target] ?? 0 < maxOrders(type)) // assume we cannot place an order on an existing order (including if the existing order has started to be executed)
         this.plan = null
         if (plan.length === 0) {
             return "finished"
@@ -109,7 +110,7 @@ class Ant {
             if (type === "worker") { return ["finished", plan[0]] }
             else { return "finished" }
         }
-        orders[type][target] = true
+        orders[type][target] = (orders[type][target] ?? 0) + 1
         return [type, plan]
     }
 
@@ -119,7 +120,8 @@ class Ant {
         let [type, plan] = task
         let target = plan[0]
         let task0 = [type, target]
-        delete orders[type][target]
+        orders[type][target] -= 1
+        if (!orders[type][target]) delete orders[type][target]
         targets[task0] = this
         this.plan = plan
         if (type !== "worker") {
@@ -135,8 +137,13 @@ class Ant {
         delete draggers[[this.dragging, src]]
         assert(!draggers[[this.dragging, dest]])
         draggers[[this.dragging, dest]] = this
-        move(this.dragging, src, dest)
+
+        let thing = move(this.dragging, src, dest)
         this.move(src)
+        if (thing == "tunnel") {
+            // we just placed dirt as a tunnel in air; cancel plan (consider complete)
+            this.popTask()
+        }
     }
 
     followPlan() {
@@ -157,14 +164,15 @@ class Ant {
                 this.findTarget(type, result[1])
             }
             else assert(false)
-            return // could be a recursive call 
+            return // could be a recursive call so we don't spend a turn making no movement
         }
         if (this.dragging) {
             let cur = this.plan[l - 1]
             let next = this.plan[l - 2]
             if (canWalk(next)) {
-                this.doDrag(cur, next)
                 this.plan.pop()
+                this.doDrag(cur, next)
+
                 return
             }
             else {
@@ -178,8 +186,8 @@ class Ant {
                 // - ???
                 if (other = hasAnt(next)) {
                     if (other === this) {
-                        this.doDrag(cur, next)
                         this.plan.pop()
+                        this.doDrag(cur, next)
                         return
                     }
                     else {
@@ -188,8 +196,8 @@ class Ant {
                     }
                 }
                 else if (isAir(next)) {
-                    this.doDrag(cur, next)
                     this.plan.pop()
+                    this.doDrag(cur, next)
                 }
                 else {
                     // TODO
@@ -236,7 +244,8 @@ class Ant {
                         // findBuildPlan
                     }
                     if (draggers[["dirt", next]]) {
-                        // ?
+                        // TODO
+                        assert(false)
                     }
                 }
                 else if (other = hasAnt(next)) {
@@ -250,6 +259,10 @@ class Ant {
 
 }
 
+function maxOrders(type) {
+    if (type == "dirt") return 2
+    else return 1
+}
 
 
 queen = new Ant([0, 0])
@@ -258,6 +271,13 @@ queen.queen = false // TODO:make this matter and change it to true
 function sel(p) {
     if (!targets[["worker", p]] && isDirt(p)) {
         orders["worker"][p] = true
+    }
+    if (isAir(p) && ((orders["dirt"][p] ?? 0) + !!targets[["dirt", p]] < maxOrders("dirt"))) {
+        orders["dirt"][p] = (orders["dirt"][p] ?? 0) + 1
+    }
+    if (map[p]?.includes("tunnel") && !targets[["dirt", p]]) {
+        assert(!isDirt(p))
+        orders["dirt"][p] = 1
     }
     console.log(p)
     redraw()
@@ -321,10 +341,11 @@ function take(thing, src) {
         put("tunnel", src)
         if (!l?.includes(thing)) return
     }
-    assert(l.includes(thing))
+    assert(l.includes(thing), l, thing, src)
     if (l.length === 1) delete map[src]
     else l.splice(l.indexOf(thing), 1)
 }
+
 function put(thing, dst) {
     if (thing == "dirt") {
         if (isAir(dst)) {
@@ -337,10 +358,12 @@ function put(thing, dst) {
     }
     if (map[dst]) map[dst].push(thing)
     else map[dst] = [thing]
+    return thing
 }
+
 function move(thing, src, dst) {
     take(thing, src)
-    put(thing, dst)
+    return put(thing, dst)
 }
 
 const rand = Math.random
@@ -425,8 +448,11 @@ function setTickrate(rate) {
 
 setTickrate(200)
 
-function assert(c) {
+function assert(c, ...args) {
     if (!c) {
+        if (args.length) {
+            console.error(...args)
+        }
         throw "assertion"
     }
 }

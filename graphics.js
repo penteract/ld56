@@ -37,6 +37,13 @@ function draw() {
         p = p.split(",")
         ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
     }
+    for (let p in orders["dirt"]) if (orders["dirt"][p]) {
+        p = p.split(",")
+        ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+        if (orders["dirt"][p] > 1) {
+            ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+        }
+    }
     ctx.fillStyle = "#AAA8"
     for (let wp in targets) if (targets[wp]) {
         wp = wp.split(",")
