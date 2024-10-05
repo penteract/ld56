@@ -156,7 +156,7 @@ class Ant {
             let draggedPos = plan[plan.length - 1]
             assert(draggers[[type, draggedPos]] === undefined)
             draggers[[type, draggedPos]] = this
-              // orders["worker"][draggedPos] may not have been true. That's not a problem
+            // orders["worker"][draggedPos] may not have been true. That's not a problem
             delete orders["worker"][draggedPos]
         }
     }
@@ -255,40 +255,40 @@ class Ant {
                     this.doDrag()
                 }
                 else if (isDirt(next)) {
-                    if (other = draggers[["dirt",next]]){
+                    if (other = draggers[["dirt", next]]) {
                         assert(false)
                     }
-                    else{
+                    else {
                         if ((other = targets[["worker", next]]) || orders["worker"][next]) {
                             console.log("encountered dirt, switching to drag it")
                             let origPlan = this.plan
                             let origPos = this.p
                             origPlan.push(origPos)
-                            origPlan.push(origPlan[origPlan.length-2])
+                            origPlan.push(origPlan[origPlan.length - 2])
                             this.doDrag() // if this puts dirt into air, it unsets our plan
                             let oldTask = this.popTask() // this may be undefined, but not finished
-                            origPlan.length-=2 // pushed +2, popped -1, moved +1. after this, we are where our original dirt was, and the front of the path (its last element) is the other dirt
-                            if(other){//take their dirt and give them ours
-                                let [type,otherPlan] = other.popTask()
-                                if(type==="finished") {otherPlan = [otherPlan]}
-                                else {assert (type==="worker")}
-                                if(oldTask) {
+                            origPlan.length -= 2 // pushed +2, popped -1, moved +1. after this, we are where our original dirt was, and the front of the path (its last element) is the other dirt
+                            if (other) {//take their dirt and give them ours
+                                let [type, otherPlan] = other.popTask()
+                                if (type === "finished") { otherPlan = [otherPlan] }
+                                else { assert(type === "worker") }
+                                if (oldTask) {
                                     other.giveTask([
                                         "worker",
-                                        concatPaths([origPos, this.p],otherPlan)
-                                        ])
+                                        concatPaths([origPos, this.p], otherPlan)
+                                    ])
                                 }
                             } else if (oldTask) { // order the dirt we dropped to be collected
                                 orders["worker"][origPos] = true
                             }
-                            this.giveTask(["dirt" ,origPlan])
+                            this.giveTask(["dirt", origPlan])
                         }
-                        else{
+                        else {
                             // wait for next turn and recalculate path around obstacle then
                             console.log("encountered dirt, rerouting")
                             let t = this.popTask()
-                            if(t!="finished" && t[0]!="finished"){
-                                this.giveTask(["worker",[t[1][t[1].length-1]]])
+                            if (t != "finished" && t[0] != "finished") {
+                                this.giveTask(["worker", [t[1][t[1].length - 1]]])
                             }
                             // could consider if we fail this reroute to continue like the ordered/targetted case -
                             //  swap with current block, pick up new block and continue along old path
@@ -297,7 +297,7 @@ class Ant {
                         }
                     }
                 }
-                else{
+                else {
                     // this shouldn't happen (not air, not dirt, not ant => tunnel)
                     // unless we decide to add restrictions involving water
                     assert(false)
@@ -317,7 +317,7 @@ class Ant {
                 if (isDirt(next)) {
                     // ordered: done - find new plan
                     // targeted: switch plans with targeter
-                    // dragged: switch path or wait
+                    // dragged: switch path or wait 
                     // built: swap
                     if (orders["worker"][next]) {
                         console.log("found other order")
@@ -334,12 +334,12 @@ class Ant {
                         console.log("found another targeted block - handing off plan")
 
                         let [otherType, otherPlan] = other.popTask()
-                        assert(otherType === "finished" && otherPlan +"" === next+""
+                        assert(otherType === "finished" && otherPlan + "" === next + ""
                             || otherType === "worker" && otherPlan[0] + "" === next + "")
 
                         let [myType, myPlan] = this.popTask() // this cannot be finished because next is someone else's target
                         assert(myType === "worker")
-                        if(otherType!=="finished"){
+                        if (otherType !== "finished") {
                             otherPlan = concatPaths(myPlan, otherPlan)
                             other.giveTask([myType, otherPlan])
                         }
@@ -410,11 +410,11 @@ class Ant {
                         return
                     }
                 }
-                else{
-                    if(!willWalk(next) || rand()<0.1){
+                else {
+                    if (!willWalk(next) || rand() < 0.1) {
                         this.popPlan()
                     }
-                    else{} // wait
+                    else { } // wait
                 }
             }
         }
