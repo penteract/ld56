@@ -29,17 +29,18 @@ class Ant {
         move(this, this.p, dst)
     }
 
-    findTarget(type,start) {
+    findTarget(type, start) {
         let ant = this
         let ordrs = orders[type]// TODO: check if empty
 
         // This is a heap because that might help with efficiency if we try to reuse it
         // might give suboptimal paths, but it's better than flood filling the map for every ant.
         // We probably need a path fixer that removes loops
-        if (start===undefined) {
-            assert(type==="worker")
-            start=this.p}
-        else {assert([...neighbs(start)].find(x=>x==this.p+"")) }
+        if (start === undefined) {
+            assert(type === "worker")
+            start = this.p
+        }
+        else { assert([...neighbs(start)].find(x => x == this.p + "")) }
         let heap = [[0, [this.p, null]]]
         let seen = {}
         seen[heap[0][1][0]] = true
@@ -62,11 +63,11 @@ class Ant {
             }
         }
         console.log(Object.keys(seen).length, found)
-        if(found){
+        if (found) {
             let plan = linkedListToArray(found)
             console.log(plan)
-            if(type==="worker"){plan.pop()}
-            this.giveTask([type,plan])
+            if (type === "worker") { plan.pop() }
+            this.giveTask([type, plan])
         }
         // targets[["worker", this.plan[0]]] = this
         // this.dragging = undefined
@@ -92,8 +93,8 @@ class Ant {
             return "finished"
         }
         if (plan.length === 1) {
-            if (type==="worker"){return ["finished",plan[0]]}
-            else {return "finished"}
+            if (type === "worker") { return ["finished", plan[0]] }
+            else { return "finished" }
         }
         orders[type][target] = true
         this.plan = null
@@ -107,12 +108,12 @@ class Ant {
         let target = plan[0]
         let task0 = [type, target]
         orders[type][target] = undefined
-        targets[type,target] = this
+        targets[type, target] = this
         this.plan = plan
-        if(type !== "worker"){
+        if (type !== "worker") {
             this.dragging = type
-            assert(draggers[type,plan[plan.length-1]] === undefined)
-            draggers[type,plan[plan.length-1]] = this
+            assert(draggers[type, plan[plan.length - 1]] === undefined)
+            draggers[type, plan[plan.length - 1]] = this
         }
     }
 
@@ -123,29 +124,29 @@ class Ant {
         let l = this.plan.length
         //print(l)
         if (l === 0) { // Plan is probably complete
-            assert ( this.popTask()==="finished" )
+            assert(this.popTask() === "finished")
             return
         }
-        if(l === 1){
+        if (l === 1) {
             let result = this.popTask
-            if (result==="finished") {return}
-            else if (result[0]==="finished"){
+            if (result === "finished") { return }
+            else if (result[0] === "finished") {
                 let type = getType(result[1])
-                let r = findTarget(type,result[1])
+                let r = findTarget(type, result[1])
             }
         }
-        if(this.dragging){
+        if (this.dragging) {
             next = this.plan[l - 2]
-            if(canWalk(next)){
-                move(this.dragging,this.plan[l - 1],next)
+            if (canWalk(next)) {
+                move(this.dragging, this.plan[l - 1], next)
                 this.move(this.plan[l - 1])
             }
             //TODO
-            else{
+            else {
                 assert(false)
             }
         }
-        else{ // worker task
+        else { // worker task
             let next = this.plan[l - 1]
             console.log("next")
             if (canWalk(next)) {
@@ -218,7 +219,7 @@ function isDirt(p) {
     return (p[1] < 0 && !map[p]?.includes("tunnel")
         || map[p]?.includes("dirt"))
 }
-function getType(p){
+function getType(p) {
     assert(isDirt(p))
     return "dirt"
 }
