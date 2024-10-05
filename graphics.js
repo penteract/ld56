@@ -4,6 +4,8 @@ SQSZ = 16
 DIRT_COL = "Sienna" // did you know sienna is a kind of clay?
 TUNNEL_COL = "sandyBrown"
 
+STROKEWIDTH = 1
+
 function draw() {
     ctx.fillStyle = "skyblue" // good color for the sky
     ctx.fillRect(SQSZ * minx, 0, SQSZ * (maxx - minx + 1), SQSZ * (maxy + 1))
@@ -24,7 +26,7 @@ function draw() {
 
     }
 
-    ctx.fillStyle = "mediumpurple"
+    ctx.fillStyle = "darkred"
     for (let ant of ants) {
         ctx.fillRect(ant.p[0] * SQSZ, ant.p[1] * SQSZ, SQSZ, SQSZ)
     }
@@ -32,20 +34,20 @@ function draw() {
     for (let p of water) {
         ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
     }
-    ctx.fillStyle = "#8888"
+    ctx.strokeStyle = "#F00"
     for (let p in orders["worker"]) if (orders["worker"][p]) {
         p = p.split(",")
-        ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+        ctx.strokeRect(SQSZ * p[0] + STROKEWIDTH/2  , SQSZ * p[1] + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
     }
     for (let p in orders["dirt"]) if (orders["dirt"][p]) {
         p = p.split(",")
-        ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+        ctx.strokeRect(SQSZ * p[0] + STROKEWIDTH/2  , SQSZ * p[1] + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
     }
-    ctx.fillStyle = "#AAA8"
+    ctx.strokeStyle = "#FFF"
     for (let wp in targets) if (targets[wp]) {
         wp = wp.split(",")
         if (wp[0] = "worker") {
-            ctx.fillRect(SQSZ * wp[1], SQSZ * wp[2], SQSZ, SQSZ)
+            ctx.strokeRect(SQSZ * wp[1] + STROKEWIDTH/2  , SQSZ * wp[2] + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
         }
     }
 }

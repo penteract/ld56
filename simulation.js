@@ -105,7 +105,7 @@ class Ant {
         // this.dragging = undefined
     }
 
-    popTask() {
+    popTask(finishing) {
         //return type [type,plan], ["finished",locaton], "finished"
         if (!this.plan) return null
         let plan = this.plan
@@ -113,7 +113,7 @@ class Ant {
         let type = this.dragging ?? "worker"
         let task0 = [type, target]
         if (this.dragging) {
-            let dragPos = this.plan[this.plan.length - 1]
+            var dragPos = this.plan[this.plan.length - 1]
             assert(draggers[[type, dragPos]] === this)
             delete draggers[[type, dragPos]]
             this.dragging = null
@@ -128,6 +128,10 @@ class Ant {
         if (plan.length === 1) {
             if (type === "worker") { return ["finished", plan[0]] }
             else { return "finished" }
+        }
+        if(!finishing && type!=="worker"){
+            if(orders[type][dragPos]){console.warn("didn't expect an order to already be there")}
+            orders[type][dragPos] = true
         }
         orders[type][target] = true
         return [type, plan]
@@ -144,8 +148,11 @@ class Ant {
         this.plan = plan
         if (type !== "worker") {
             this.dragging = type
-            assert(draggers[[type, plan[plan.length - 1]]] === undefined)
-            draggers[[type, plan[plan.length - 1]]] = this
+            let draggedPos = plan[plan.length - 1]
+            assert(draggers[[type, draggedPos]] === undefined)
+            draggers[[type, draggedPos]] = this
+              // orders[type][target] may not have been true. That's not a problem
+            delete orders[type][draggedPos]
         }
     }
 
@@ -162,7 +169,7 @@ class Ant {
         this.move(src)
         if (thing == "tunnel") {
             // we just placed dirt as a tunnel in air; cancel plan (consider complete)
-            this.popTask()
+            this.popTask(true)
         }
     }
 
@@ -247,11 +254,11 @@ class Ant {
                     }
                     else{
                         if ((other = targets[["worker", next]]) || orders["worker"][next]) {
-                            origPlan = this.plan
-                            origPos = this.p
+                            let origPlan = this.plan
+                            let origPos = this.p
                             origPlan.push(origPos)
                             origPlan.push(origPlan[origPlan.length-2])
-                            doDrag() // if this puts dirt into air, it unsets our plan
+                            this.doDrag() // if this puts dirt into air, it unsets our plan
                             let oldTask = this.popTask() // this may be undefined, but not finished
                             origPlan.length-=2 // pushed +2, popped -1, moved +1
                             if(other){//take their dirt and give them ours
@@ -264,6 +271,8 @@ class Ant {
                                         concatPaths([origPos, this.p],otherPlan)
                                         ])
                                 }
+                            } else {
+
                             }
                             this.giveTask(["dirt" ,origPlan])
                         }
