@@ -4,10 +4,15 @@
 //   if ant.plan:
 //     tasktype = ant.dragging ?? "worker"
 //     targets[tasktype, ant.plan[0]] === ant
+//   if ant.dragging:
+//     draggers[ant.draggng,ant.plan[-1]] = ant
+//     if ant.dragging == "dirt":
+//       isDirt(ant.plan[-1])
 
 // for each position p:
 //   if orders[tasktype,p]:
 //     not targets[tasktype,p]
+//     not draggers[tasktype,p]
 //   if orders["workers",p]:
 //     isDirt(p)
 
@@ -241,6 +246,7 @@ class Ant {
 
                         }
                         else {
+                            // TODO
                             assert(false)
                         }
                     }
@@ -261,7 +267,7 @@ class Ant {
                             origPlan.push(origPlan[origPlan.length-2])
                             this.doDrag() // if this puts dirt into air, it unsets our plan
                             let oldTask = this.popTask() // this may be undefined, but not finished
-                            origPlan.length-=2 // pushed +2, popped -1, moved +1
+                            origPlan.length-=2 // pushed +2, popped -1, moved +1. after this, we are where our original dirt was, and the front of the path (its last element) is the other dirt
                             if(other){//take their dirt and give them ours
                                 let [type,otherPlan] = other.popTask()
                                 if(type==="finished") {otherPlan = [otherPlan]}
@@ -284,10 +290,16 @@ class Ant {
                             if(t!="finished" && t[0]!="finished"){
                                 this.giveTask(["worker",[t[1][t[1].length-1]]])
                             }
+                            // could consider if we fail this reroute to continue like the ordered/targetted case -
+                            //  swap with current block, pick up new block and continue along old path
+                            //  and leaving the other block behind
+                            // this current implementation would be hard to do that with; we could compute the reroute directly with findTarget
                         }
                     }
                 }
                 else{
+                    // this shouldn't happen (not air, not dirt, not ant => tunnel)
+                    // unless we decide to add restrictions involving water
                     assert(false)
                 }
             }
@@ -305,7 +317,7 @@ class Ant {
                 if (isDirt(next)) {
                     // ordered: done - find new plan
                     // targeted: switch plans with targeter
-                    // dragged: ??
+                    // dragged: switch path or wait
                     // built: swap
                     if (orders["worker"][next]) {
                         console.log("found other order")
