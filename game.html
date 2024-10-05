@@ -21,13 +21,17 @@ class Ant{
 
 queen = new Ant()
 queen.queen=true
-ants = [queen]
-map = {}  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
-water = [] // immutable?
-
+let ants = [queen]
+let map = {"0,-1":["tunnel"]}  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
+let water = [[.5,-.5],[1,-2]] // immutable?
+let tunnels = [[0,-1]]
+let dirts = []
 // Orders
-toDig = []
-toBuild = []
+let toDig = []
+let toBuild = []
+function add(p,q){
+  return [p[0]+q[0],p[1]+q[1]]
+}
 
 function isDirt(p){
   return (p[1]<0 && !map[p]?.includes("tunnel")
@@ -39,37 +43,60 @@ function canWalk(p){
   (p[1]<0 && !map[p]?.includes("tunnel")
           || map[p]?.includes("dirt") )
 }
-function canBreathe(p)
+function canBreathe(p){
+  for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+    let q = add(p,[dx,dy])
+    if (!isDirt(q) && !map[q].includes("water")){
+      return true
+    }
+  }
+  return false
+}
 
 
 function tick(){
 }
 setInterval(tick,1000)
 
+function draw(){
+  ctx.fillStyle="skyblue" // good color for the sky
+  ctx.fillRect(16*minx,0,16*(maxx-minx),16*maxy)
+  ctx.fillStyle="Sienna" // did you know sienna is a kind of clay?
+  ctx.fillRect(16*minx,16*miny,16*(maxx-minx),-16*miny)
+  ctx.fillStyle="sandyBrown"
+  for (let p of tunnels){
+    ctx.fillRect(16*p[0],16*p[1],16,16)
+  }
+  ctx.fillStyle="Sienna" // did you know sienna is a kind of clay?
+  for (let p of dirts){
+    ctx.fillRect(16*p[0],16*p[1],16,16)
+  }
+  ctx.fillStyle="mediumpurple"
+  ctx.fillRect(0,0,16,16)
+  ctx.fillStyle="#00F8"
+  for (let p of water){
+    ctx.fillRect(16*p[0],16*p[1],16,16)
+  }
+}
 
 
-canvas = document.getElementById("main");
-var ctx = canvas.getContext("2d");
-scale = 2 // size of a square in pixels divided by 16
+let canvas = document.getElementById("main");
+let ctx = canvas.getContext("2d");
+let scale = 2 // size of a square in pixels divided by 16
 // Keeping scale an integer probably helps avoid faint lines between squares
-xoff = ~~((window.innerWidth-32)/2) ; yoff = ~~((window.innerHeight)/2) // location of (0,0) in pixels
+let xoff = ~~((window.innerWidth-32)/2) ;
+let yoff = ~~((window.innerHeight)/2) // location of (0,0) in pixels
 // keeping these integers helps avoid faint lines between squares
 
-maxx=20
-minx=-20
-maxy=20
-miny=-20
+let maxx=20
+let minx=-20
+let maxy=20
+let miny=-20
 function redraw(){
   ctx.resetTransform()
   ctx.fillStyle="grey"
   ctx.fillRect(0,0,w,h)
   ctx.setTransform(scale,0,0,-scale,xoff,yoff) // I think setTransform is less likely to leave gaps between squares than mucking with coordinates
-  ctx.fillStyle="skyblue" // good color for the sky
-  ctx.fillRect(16*minx,0,16*(maxx-minx),16*maxy)
-  ctx.fillStyle="Sienna" // did you know sienna is a kind of clay?
-  ctx.fillRect(16*minx,16*miny,16*(maxx-minx),-16*miny)
-  ctx.fillStyle="mediumpurple"
-  ctx.fillRect(0,0,10,10)
   draw()
 }
 function resizeCanvas() {
@@ -83,14 +110,14 @@ function resizeCanvas() {
 function scl(x,y,factor){
   if (factor>2) factor=2;
   if (factor<0.5)factor=0.5;
-  var oldscale=scale
+  let oldscale=scale
   scale*=factor
   scale = Math.round(scale*16)/16
   if(scale==oldscale && factor<0) scale -= 1/16
   else if(scale==oldscale && factor>0) scale += 1/16
   if(scale<1)scale=1;
   if(scale>1000)scale=1000;
-  var sr=scale/oldscale
+  let sr=scale/oldscale
   //xoff = (x-xoff)*(1-sr)
   // This took far too long
   xoff = Math.round((x - (x-xoff)*sr))
