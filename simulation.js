@@ -279,6 +279,15 @@ class Ant {
                                     ])
                                 }
                             } else if (oldTask) { // order the dirt we dropped to be collected
+                                // to keep invariants:
+                                // - this must be dirt 
+                                // -- the doDrag ensures that)
+                                // -- if the doDrag pushed it onto air, oldTask is falsy as it ended up being finished in the doDrag step
+                                // - and not targeted 
+                                // -- it shouldn't be due to not being dirt previously
+
+                                // additionally in this case there must have been an order on the previous dirt om position next; so it makes sense to create a new order.
+                                // the following call to giveTask removes the original order on next
                                 orders["worker"][origPos] = true
                             }
                             this.giveTask(["dirt", origPlan])
@@ -411,6 +420,8 @@ class Ant {
                     }
                 }
                 else {
+                    // we can't walk to where we want, but it's not because of dirt or ant. probably bc we pathed assuming dirt will be placed that has not yet arrived.
+                    // sensible to abandon plan here; or wait.
                     if (!willWalk(next) || rand() < 0.1) {
                         this.popPlan()
                     }
