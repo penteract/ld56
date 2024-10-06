@@ -21,28 +21,26 @@ function draw() {
     ctx.fillRect(SQSZ * minx, SQSZ * miny, SQSZ * (maxx - minx + 1), -SQSZ * miny)
 
     for (let p in map) {
-        elt = map[p]
+        let elt = map[p]
         p = p.split(",")
-        for (let t in colMap) {
-            if (elt?.includes(t)) {
-                ctx.fillStyle = colMap[t]
+        let wet = false
+        for (let x of elt){
+            if(["tunnel","food","queen","grub","dirt"].includes(x)){
+                ctx.fillStyle=colMap[x]
                 ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
             }
+            else if(x instanceof Ant){
+                ctx.fillStyle=colMap["ant"]
+                ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+            }
+            if(x=="water") {wet=true}
+        }
+        if(wet){
+            ctx.fillStyle=colMap["water"]
+            ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
         }
 
     }
-    for (let type of ["ant", "water"]) {
-        ctx.fillStyle = colMap[type]
-        for (let thing of thingLists[type]) {
-            if (thing.p) {
-                ctx.fillRect(thing.p[0] * SQSZ, thing.p[1] * SQSZ, SQSZ, SQSZ)
-            }
-            else {
-                ctx.fillRect(thing[0] * SQSZ, thing[1] * SQSZ, SQSZ, SQSZ)
-            }
-        }
-    }
-    //}
     ctx.setLineDash([5, 5])
     for (let type in orders) {
         ctx.strokeStyle = colMap[type]
@@ -58,31 +56,6 @@ function draw() {
         ctx.strokeStyle = colMap[thing]
         ctx.strokeRect(SQSZ * x + STROKEWIDTH / 2, SQSZ * y + STROKEWIDTH / 2, SQSZ - STROKEWIDTH, SQSZ - STROKEWIDTH)
     }
-
-    /*    ctx.fillStyle = "darkred"
-        for (let ant of ants) {
-            ctx.fillRect(ant.p[0] * SQSZ, ant.p[1] * SQSZ, SQSZ, SQSZ)
-        }
-        ctx.fillStyle = "#00F8"
-        for (let p of water) {
-            ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
-        }*/
-    /*    ctx.strokeStyle = "#F00"
-        for (let p in orders["worker"]) if (orders["worker"][p]) {
-            p = p.split(",")
-            ctx.strokeRect(SQSZ * p[0] + STROKEWIDTH/2  , SQSZ * p[1] + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
-        }
-        for (let p in orders["dirt"]) if (orders["dirt"][p]) {
-            p = p.split(",")
-            ctx.strokeRect(SQSZ * p[0] + STROKEWIDTH/2  , SQSZ * p[1] + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
-        }
-        ctx.strokeStyle = "#FFF"
-        for (let wp in targets) if (targets[wp]) {
-            wp = wp.split(",")
-            if (wp[0] = "worker") {
-                ctx.strokeRect(SQSZ * wp[1] + STROKEWIDTH/2  , SQSZ * wp[2] + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
-            }
-        }*/
 
     updateHud()
 }
