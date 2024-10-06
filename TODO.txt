@@ -30,11 +30,15 @@ Optional:
     allow explicitly building dirt vs tunnel
 
   Stuff that isn't dirt(movable food/queen/grubs)
+    - add functionality for them (queen spawns grubs, grubs grow into ants, maybe queen needs food to produce grubs)
     Important Idea: queen isn't an instance of Ant
+
+    procedural generation of food? maybe higher density along diagonals from start to incentivise horizontal expansion which is harder
 
 
   Fancier graphics
     I feel like this is optional. Animating water movement would be quite tricky
+    colourblindness mode? (letters on solids/ants)
 
 
 Ants should to know when they are doing something that wasn't specifically ordered, e.g. dragging dirt to air that hadn't been ordered to be filled

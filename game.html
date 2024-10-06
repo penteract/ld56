@@ -1,19 +1,36 @@
 <html>
+
 <head>
-<title> Ants </title>
-<style>
-html,body,canvas{
-margin:0px;
-padding:0px;
-}
-</style>
+    <title> Ants </title>
+    <style>
+        html,
+        body,
+        canvas {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        #hud {
+            position: absolute;
+            width: 10%;
+            height: 60%;
+            top: 5px;
+            right: 5px;
+        }
+    </style>
 </head>
+
 <body>
-<canvas id="main">
-</canvas>
-<script src="heap.js"> </script>
-<script src="simulation.js"> </script>
-<script src="graphics.js"> </script>
-<script src="zoomPan.js"> </script>
+    <canvas id="main">
+    </canvas>
+    <div id="hud">
+        <div>Order mode: <span id="order-mode"></span></div>
+    </div>
+
+    <script src="heap.js"> </script>
+    <script src="simulation.js"> </script>
+    <script src="graphics.js"> </script>
+    <script src="interface.js"></script>
+    <script src="zoomPan.js"> </script>
 </body>
 <html>

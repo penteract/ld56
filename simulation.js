@@ -553,16 +553,7 @@ function concatPaths(p1, p2) {
     return res
 }
 
-orderKind = "dirtTunnel" // TODO: proper UI for this. currently set it manually in console to test ordering different things. 
-function sel(p) {
-    if (orderKind === "dirtTunnel") {
-        setOrder(p, "worker") || setOrder(p, "dirt")
-    }
-    else {
-        setOrder(p, orderKind)
-    }
-    redraw()
-}
+
 
 function setOrder(p, type) {
     // sets an order of the specified type if able, upholding invariants. returns true if successful
@@ -582,6 +573,7 @@ function setOrder(p, type) {
 }
 
 function clearOrder(p) {
+    // consider also canceling targeted tasks and/or delayed orders
     res = false
     for (let t in orders) {
         res ||= orders[t][p]

@@ -51,6 +51,7 @@ function draw() {
             ctx.strokeRect(SQSZ * x + STROKEWIDTH / 2, SQSZ * y + STROKEWIDTH / 2, SQSZ - STROKEWIDTH, SQSZ - STROKEWIDTH)
         }
     }
+    // todo: delayed orders?
     ctx.setLineDash([])
     for (let wp in targets) {
         let [thing, x, y] = wp.split(",")
@@ -82,6 +83,8 @@ function draw() {
                 ctx.strokeRect(SQSZ * wp[1] + STROKEWIDTH/2  , SQSZ * wp[2] + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
             }
         }*/
+
+    updateHud()
 }
 
 
