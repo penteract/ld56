@@ -24,8 +24,12 @@ function draw() {
         let elt = map[p]
         p = p.split(",")
         let wet = false
+        if(elt.includes("tunnel")){
+                ctx.fillStyle=colMap["tunnel"]
+                ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+        }
         for (let x of elt){
-            if(["tunnel","food","queen","grub","dirt"].includes(x)){
+            if(["food","queen","grub","dirt"].includes(x)){
                 ctx.fillStyle=colMap[x]
                 ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
             }
