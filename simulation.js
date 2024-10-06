@@ -145,6 +145,11 @@ class Ant {
     giveTask(task) {
         assert(!this.plan)
         if (task === null || task === "finished" || task[0] === "finished") return
+        // TODO: Remove assertion for efficiency before release
+        // DO NOT REMOVE beforehand. it is a very useful test
+        for(let i=0;i<task[1].length;i++){
+            assert([...neighbs(task[1][i])].find(x => x==(i+1<task[1].length?task[1][i+1]:this.p)+"" ))
+        }
         let [type, plan] = task
         let target = plan[0]
         let task0 = [type, target]
@@ -164,7 +169,7 @@ class Ant {
     doDrag() {
         let src = this.plan.pop()
         let dest = this.plan[this.plan.length - 1]
-        console.log(draggers)
+        //console.log(draggers)
         assert(draggers[[this.dragging, src]] === this)
         delete draggers[[this.dragging, src]]
         assert(!draggers[[this.dragging, dest]])
@@ -183,7 +188,6 @@ class Ant {
         let ant = this
         let other
         let l = this.plan.length
-        //print(l)
         if (l === 0) { // Plan is probably complete
             assert(this.popTask() === "finished")
             return
@@ -238,7 +242,7 @@ class Ant {
                             let [otherType, otherPlan] = otherTask
                             assert(otherType === "worker")
 
-                            otherPlan = concatPaths(otherPlan, [other.p, next, this.p])
+                            otherPlan = concatPaths(otherPlan, [other.p, cur, this.p])
                             otherPlan.pop()
 
                             this.giveTask([otherType, otherPlan])
@@ -249,7 +253,7 @@ class Ant {
                             if(other.plan[other.plan.length-2]+""==this.p+""){
                                 console.info("swapping plans that push into each other")
                                 let myTask = this.popTask() // did not finish
-                                let otherTask = other.popTask()// might have finished
+                                let otherTask = other.popTask()// did not finish
                                 other.giveTask(myTask)
                                 this.giveTask(otherTask)
                             }else{// probably fine to wait, but there are possible deadlocks involving several ants.
@@ -278,7 +282,7 @@ class Ant {
                                 let myTask = this.popTask() // did not finish
                                 let otherTask = other.popTask()// did not finish
                                 //shorten both tasks, draggers handled by poptask
-                                mytask[1].pop()
+                                myTask[1].pop()
                                 otherTask[1].pop()
                                 other.giveTask(myTask)
                                 this.giveTask(otherTask)
@@ -290,7 +294,7 @@ class Ant {
                                 let otherTask = other.popTask()// might have finished
                                 // draggers handled by poptask
                                 if(otherTask=="finished"){otherTask = ["finished",[]] }
-                                otherTask[1].push(mytask[1].pop())
+                                otherTask[1].push(myTask[1].pop())
                                 other.giveTask(myTask)
                                 this.giveTask(otherTask)
                             }
@@ -354,9 +358,9 @@ class Ant {
         }
         else { // worker task
             let next = this.plan[l - 1]
-            console.log("next")
+            //console.log("next")
             if (canWalk(next)) {
-                console.log("canwalk")
+                //console.log("canwalk")
                 this.move(next)
                 this.plan.pop()
                 return
@@ -377,15 +381,17 @@ class Ant {
 
                     }
                     else if (other = targets[["worker", next]]) {
-                        // append remainder of plan to its plan, switch ant with dirt, find new plan
                         if(other===this){
                             console.warn("some sort of loop")
                             assert(this.plan[0]+""===next+"")
+                            this.popTask() // This won't say "finished", so we rely on giveTask to remove the order. If findTarget fails, this will leave the order there
+                            let type
                             if (type = getType(next)) {
                                 this.findTarget(type, next)
                             }
                             return
                         }
+                        // append remainder of plan to its plan, switch ant with dirt, find new plan
 
                         console.info("found another targeted block - handing off plan")
 
@@ -395,10 +401,12 @@ class Ant {
 
                         let [myType, myPlan] = this.popTask() // this cannot be finished because next is someone else's target
                         assert(myType === "worker")
-                        if (otherType !== "finished") {
-                            otherPlan = concatPaths(myPlan, otherPlan)
-                            other.giveTask([myType, otherPlan])
+                        if(otherType==="finished"){
+                            otherPlan = [otherPlan]
                         }
+                        myPlan.pop() // last element is same as first element from otherplan
+                        otherPlan = concatPaths(myPlan, otherPlan)
+                        other.giveTask([myType, otherPlan])
 
                         // give task to properly clear the order
                         this.giveTask(["worker", [next]])
@@ -430,11 +438,18 @@ class Ant {
                         }
                     }
                     else {
+                        /*I think that without ordering the moved dirt to be mined
+                         * (which should come with a corresponding build order next to it,
+                         * and would cause other problems)
+                         * this puts more dirt in the way of other ants, and its own path back,
+                         * causing lots of ants to end up stuck in the middle of dirt from which its hard to get them out
                         console.info("placed block in way - swapping")
                         move("dirt", next, this.p)
                         this.move(next)
                         this.plan.pop()
-                        return
+                        return*/
+                        console.info("blocked, plan abandoned ")
+                        this.popTask()
                     }
                 }
                 else if (other = hasAnt(next)) {
@@ -496,9 +511,11 @@ function concatPaths(p1, p2) {
     return res
 }
 
-
-queen = new Ant([0, 0])
-otherAnt = new Ant([1, 0])
+for (let x=0;x<5;x++){
+    //queen = new Ant([0, 0])
+    new Ant([x, 0])
+}
+queen = ants[0]
 queen.queen = false // TODO:make this matter and change it to true
 
 function sel(p) {
@@ -512,7 +529,7 @@ function sel(p) {
         assert(!isDirt(p))
         orders["dirt"][p] = true
     }
-    console.log(p)
+    // console.log(p)
     redraw()
 }
 //put("water", [10, 2])
@@ -669,7 +686,36 @@ function tick() {
             ant.findTarget("worker")
         }
         if (ant.plan) { // Execute plan
+            debug=true
+            if(debug){
+                var s = ant.plan+""
+                var d = ant.dragging
+                var toMine = {}
+                for(let k in orders["worker"]){
+                    toMine[k]="orders"
+                }
+                for(let m in targets){
+                    let [a,b,c] = m.split(",")
+                    if (a=="worker") toMine[[b,c]]="targets";
+                }
+                for(let m in draggers){
+                    let [a,b,c] = m.split(",")
+                    if (a=="dirt" && !targets[["dirt",b,c]]) toMine[[b,c]]="draggers";
+                }
+            }
             ant.followPlan()
+            if(debug){
+                for (let p in toMine){
+                    if (isDirt(p)){
+                        if (orders["worker"][p]) continue
+                        if ( targets[["worker",p]]) continue
+                        if (draggers[["dirt",p]]) continue
+                        console.error(s,d,ant,toMine[p])
+                        let x=0
+                    }
+                    //throw new Error(p+" was added by this ant")
+                }
+            }
         }
     }
     draw()
