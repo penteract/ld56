@@ -85,6 +85,6 @@ canvas.addEventListener("mousedown", function (e) {
 })
 
 canvas.addEventListener("mousemove", function (e) {
-    //console.log(e)
-    if (e.buttons === 1) { clk(e.clientX, e.clientY, e.button) }
+    // console.log(e)
+    if (e.buttons === 1 || e.buttons === 2) { clk(e.clientX, e.clientY, (e.buttons - 1) * 2) }
 })
