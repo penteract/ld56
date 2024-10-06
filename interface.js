@@ -8,10 +8,10 @@ orderType = "dirt"
 
 function sel(p, button) {
     if (shiftHeld && isSolid(p)) {
-        orderType = getType(p)
+        orderType = getSolidTypeStr(p)
     }
     if (button == 0) {
-        (orderMode.toLowerCase().includes("build") && setOrder(p, orderType)) || (orderMode.toLowerCase().includes("dig") && isSolid(p) && getType(p) === orderType && setOrder(p, "worker"))
+        (orderMode.toLowerCase().includes("build") && setOrder(p, orderType)) || (orderMode.toLowerCase().includes("dig") && isSolid(p) && getSolidTypeStr(p) === orderType && setOrder(p, "worker"))
     }
     else if (button == 2) {
         clearOrder(p)
@@ -47,4 +47,10 @@ window.addEventListener("keyup", (event) => {
 
 function updateHud() {
     document.getElementById("order-mode").textContent = orderMode + " " + orderType
+}
+
+function gameOver() {
+    clearInterval(tickInterval)
+    redraw()
+    alert("Your queen died! Refresh the page to retry.")
 }

@@ -25,6 +25,7 @@ let thingLists = {}
 thingLists["water"] = [] //[[1,-2]] // immutable?
 thingLists["tunnel"] = [[0, -1]]
 thingLists["ant"] = []
+thingLists["grub"] = []
 let dirts = []
 
 solidTypes = ["dirt", "food", "grub", "queen"] // if we add stone, we may want to separate solid types from pushable types
@@ -54,6 +55,7 @@ class Ant {
         this.p = p
         put(this, p)
         thingLists["ant"].push(this)
+        this.alive = true
 
     }
     move(dst) {
@@ -220,7 +222,7 @@ class Ant {
             let result = this.popTask()
             if (result === "finished") { return }
             else if (result[0] === "finished") {
-                let type = getType(result[1])
+                let type = getSolidTypeObj(result[1])
                 this.findTarget(type, result[1])
             }
             else assert(false)
@@ -301,7 +303,7 @@ class Ant {
                     this.doDrag()
                 }
                 else if (isSolid(next)) {
-                    let nextType = getType(next)
+                    let nextType = getSolidTypeObj(next)
                     let curType = this.dragging
                     if (other = draggers[[nextType, next]]) {
                         console.info(this.idx, new Date(), "Trying to push dirt into dirt someone else is trying to push")
@@ -311,7 +313,7 @@ class Ant {
                             let otherTask = other.popTask()// did not finish
                             //shorten both tasks, draggers handled by poptask
                             myTask[1].pop()
-                            let cur = otherTask[1].pop()
+                            otherTask[1].pop()
                             // for two dirts, we'd be done; each dirt is in the intended next step of the other plan
 
                             // for other pushables, we should swap them 
@@ -336,8 +338,20 @@ class Ant {
                                 // draggers handled by poptask
                                 if (otherTask == "finished") { otherTask = ["finished", []] }
                                 otherTask[1].push(myTask[1].pop())
-                                other.giveTask(myTask)
-                                this.giveTask(otherTask)
+
+                                // for other pushables, we should swap them 
+                                let res = swap(curType, cur, nextType, next)
+                                // could have pushed dirt into air like this - handle potential leftover orders
+                                if (res[0] === "tunnel") { // swap returns the result of the first type first - so this is the case of dirt (curType) becoming tunnel at position next
+                                    // might not be an order here, but if there is (next step was the last step), remove it
+                                    // the order will only be for dirt, not any other type
+                                    delete orders["dirt"][next]
+                                }
+                                else other.giveTask(myTask) // we dont give this task if it just finished by being pushed to air (myTask had next as its next step)
+                                if (res[1] == "tunnel") {
+                                    delete orders["dirt"][cur]
+                                }
+                                else this.giveTask(otherTask)
                             }
                         }
 
@@ -405,7 +419,7 @@ class Ant {
             }
             else {
                 if (isSolid(next)) {
-                    let nextType = getType(next)
+                    let nextType = getSolidTypeObj(next)
                     // ordered: done - find new plan
                     // targeted: switch plans with targeter
                     // dragged: switch path or wait 
@@ -414,7 +428,7 @@ class Ant {
                         console.info(this.idx, new Date(), "found other order")
                         let result = this.popTask()
                         let type
-                        if (type = getType(next)) {
+                        if (type = getSolidTypeObj(next)) {
                             this.findTarget(type, next)
                         }
 
@@ -425,7 +439,7 @@ class Ant {
                             assert(this.plan[0] + "" === next + "")
                             this.popTask() // This won't say "finished", so we rely on giveTask to remove the order. If findTarget fails, this will leave the order there
                             let type
-                            if (type = getType(next)) {
+                            if (type = getSolidTypeObj(next)) {
                                 this.findTarget(type, next)
                             }
                             return
@@ -451,7 +465,7 @@ class Ant {
                         this.giveTask(["worker", [next]])
                         assert(this.popTask()[0] == "finished")
 
-                        let newType = getType(next)
+                        let newType = getSolidTypeObj(next)
                         this.findTarget(newType, next)
                     }
                     else if (other = draggers[[nextType, next]]) {
@@ -537,6 +551,57 @@ class Ant {
             }
         }
     }
+
+    tick() {
+        let debug = true
+        if (debug) {
+            var s = this.plan + ""
+            var d = this.dragging
+            var toMine = {}
+            for (let k in orders["worker"]) {
+                toMine[k] = "orders"
+            }
+            for (let m in targets) {
+                let [a, b, c] = m.split(",")
+                if (a == "worker") toMine[[b, c]] = "targets";
+            }
+            for (let m in draggers) {
+                let [a, b, c] = m.split(",")
+                if (a == "dirt" && !targets[["dirt", b, c]]) toMine[[b, c]] = "draggers";
+            }
+        }
+
+        if (isAir(this.p) && !canStay(this.p)) {
+            let below = add(this.p, [0, -1])
+            assert(!isSolid(below))
+            if (!hasAnt(below)) {
+                this.popTask(true)
+                this.move(below)
+            }
+        }
+
+        if (!this.plan) {
+            console.log("finding target")
+            this.findTarget("worker")
+        }
+        if (this.plan) { // Execute plan
+            this.followPlan()
+        }
+
+        if (debug) {
+            for (let p in toMine) {
+                if (isDirt(p)) {
+                    if (orders["worker"][p]) continue
+                    if (targets[["worker", p]]) continue
+                    if (draggers[["dirt", p]]) continue
+                    if (delayedOrders["worker"][p]) continue
+                    console.error(s, d, this, toMine[p])
+                    throw Error
+                }
+                //throw new Error(p+" was added by this ant")
+            }
+        }
+    }
 }
 
 function concatPaths(p1, p2) {
@@ -598,7 +663,7 @@ function isDirt(p) {
 function isSolid(p) {
     if (isDirt(p)) return true
     for (let t of solidTypes) {
-        if (map[p]?.includes(t)) return true
+        if (map[p]?.find(x => x + "" === t)) return true
     }
     return false
 }
@@ -608,15 +673,20 @@ function isAir(p) {
         || map[p]?.includes("air"))
 }
 
-function getType(p) {
+function getSolidTypeObj(p) {
     // assert(isDirt(p)) <- would like to do this, but it fails sometimes and it probably not too bad if it happens
 
     if (isDirt(p)) return "dirt"
     for (let t of solidTypes) {
-        if (map[p]?.includes(t)) return t
+        let r
+        if (r = map[p]?.find(x => x + "" === t)) return r
     }
 
     assert(false, "expected solid type")
+}
+
+function getSolidTypeStr(p) {
+    return getSolidTypeObj(p) + ""
 }
 
 function hasAnt(p) {
@@ -652,7 +722,7 @@ function willBeDirt(p) {
 function willBeSolid(p) {
     if (isDirt(p)) return true
     for (let t of solidTypes) {
-        if ((map[p]?.includes(t)) || targets[[t, p]] && t !== "dirt") return true
+        if ((map[p]?.find(x => x + "" === t)) || targets[[t, p]] && t !== "dirt") return true
     }
     return false
 }
@@ -694,6 +764,7 @@ function put(thing, dst) {
 
 function move(thing, src, dst) {
     take(thing, src)
+    if (typeof thing !== "string") { thing.p = dst }
     return put(thing, dst)
 }
 
@@ -778,55 +849,17 @@ function tick() {
     // tracking ants that have been encountered during the search might be able to speed things up
     // (particularly to avoid searching a large empty region multiple times)
 
-    for (let ant of thingLists["ant"]) {
-        debug = true
-        if (debug) {
-            var s = ant.plan + ""
-            var d = ant.dragging
-            var toMine = {}
-            for (let k in orders["worker"]) {
-                toMine[k] = "orders"
-            }
-            for (let m in targets) {
-                let [a, b, c] = m.split(",")
-                if (a == "worker") toMine[[b, c]] = "targets";
-            }
-            for (let m in draggers) {
-                let [a, b, c] = m.split(",")
-                if (a == "dirt" && !targets[["dirt", b, c]]) toMine[[b, c]] = "draggers";
-            }
-        }
-        if (isAir(ant.p) && !canStay(ant.p)) {
-            let below = add(ant.p, [0, -1])
-            assert(!isSolid(below))
-            if (!hasAnt(below)) {
-                ant.popTask(true) // this won't re-add an order on a dragged block. we may consider changing that.
-                ant.move(below)
-            }
-        }
-        if (!ant.plan) {
-            console.log("finding target")
-            ant.findTarget("worker")
-        }
-        if (ant.plan) { // Execute plan
-            ant.followPlan()
-        }
-        if (debug) {
-            for (let p in toMine) {
-                if (isDirt(p)) {
-                    if (orders["worker"][p]) continue
-                    if (targets[["worker", p]]) continue
-                    if (draggers[["dirt", p]]) continue
-                    if (delayedOrders["worker"][p]) continue
-                    console.error(s, d, ant, toMine[p])
-                    throw Error // this can happen legitemately (order got removed) if a search failed
-                    // perhaps if we fail a search we could keep an order on it?
-                }
-                //throw new Error(p+" was added by this ant")
-            }
-        }
-    }
+    tickThings("ant")
+    tickThings("grub")
+    queen.tick()
     draw()
+}
+
+function tickThings(thing) {
+    for (let th of thingLists[thing]) {
+        th.tick()
+    }
+    thingLists[thing] = thingLists[thing].filter(x => x.alive)
 }
 
 tickInterval = null
@@ -869,7 +902,61 @@ function inBounds(p) {
 
 let defined = undefined
 
+class Queen {
+    constructor(p) {
+        put(this, p)
+        this.p = p
+    }
+    toString() {
+        return "queen"
+    }
+    // if we want to move Queen or Grub for any reason outside fo pushing (e.g. gravity), we should be careful about orders/targets/draggers
 
+    tick() {
+        for (let n of neighbs(this.p)) {
+            if (!isSolid(n) && !hasAnt(n) && map[n]?.includes("tunnel") && !map[n]?.includes("water") && rand() < 0.01) {
+                new Grub(n)
+            }
+        }
+    }
+
+    kill() {
+        take(this, this.p)
+        gameOver()
+    }
+}
+
+class Grub {
+    constructor(p) {
+        put(this, p)
+        this.p = p
+        thingLists["grub"].push(this)
+        this.ticksToGrow = Math.floor(75 + rand() * 50)
+        this.alive = true
+    }
+    toString() {
+        return "grub"
+    }
+
+    kill() {
+        this.alive = false
+        let ant
+        if ((ant = draggers[["grub", this.p]]) || (ant = targets[["grub", this.p]])) {
+            ant.popTask()
+        }
+        clearOrder(this.p)
+        take(this, this.p)
+    }
+
+    tick() {
+        this.ticksToGrow -= 1
+        if (this.ticksToGrow <= 0) {
+            this.kill()
+            new Ant(this.p)
+        }
+    }
+
+}
 // Starting configuration 
 
 take("dirt", [0, -1])
@@ -881,8 +968,9 @@ for (let x = 0; x < 5; x++) {
     take("dirt", [2 * x, -3])
     put("food", [2 * x, -3])
 }
-put("queen", [-1, 0])
 
-queen = thingLists["ant"][0]
-queen.queen = false // TODO: don't make the queen an instance of Ant
+queen = new Queen([-1, 0])
+
+
+
 

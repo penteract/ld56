@@ -24,23 +24,23 @@ function draw() {
         let elt = map[p]
         p = p.split(",")
         let wet = false
-        if(elt.includes("tunnel")){
-                ctx.fillStyle=colMap["tunnel"]
-                ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
+        if (elt.includes("tunnel")) {
+            ctx.fillStyle = colMap["tunnel"]
+            ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
         }
-        for (let x of elt){
-            if(["food","queen","grub","dirt"].includes(x)){
-                ctx.fillStyle=colMap[x]
+        for (let x of elt) {
+            if (["food", "queen", "grub", "dirt"].includes(x + "")) {
+                ctx.fillStyle = colMap[x]
                 ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
             }
-            else if(x instanceof Ant){
-                ctx.fillStyle=colMap["ant"]
+            else if (x instanceof Ant) {
+                ctx.fillStyle = colMap["ant"]
                 ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
             }
-            if(x=="water") {wet=true}
+            if (x == "water") { wet = true }
         }
-        if(wet){
-            ctx.fillStyle=colMap["water"]
+        if (wet) {
+            ctx.fillStyle = colMap["water"]
             ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
         }
 
