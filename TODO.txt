@@ -37,3 +37,4 @@ Optional:
     I feel like this is optional. Animating water movement would be quite tricky
 
 
+Ants should to know when they are doing something that wasn't specifically ordered, e.g. dragging dirt to air that hadn't been ordered to be filled
