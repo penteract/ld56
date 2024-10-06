@@ -88,7 +88,7 @@ class Ant {
         }
 
         function validOrder(q) {
-            return ordrs[q] || (lookForAir && isAir(q) && !targets[[type, q]])
+            return ordrs[q] || (lookForAir && isAir(q) && !solidTypes.find(t => targets[[t, q]]))
         }
 
         function hCost(q) {
