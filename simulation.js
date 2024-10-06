@@ -627,6 +627,12 @@ function canWalk(p) {
     return !isSolid(p) && !hasAnt(p) &&
         (map[p]?.includes("tunnel") || isSolid([p[0], p[1] - 1]) || isSolid([p[0] - 1, p[1] - 1]) || isSolid([p[0] + 1, p[1] - 1]))
 }
+
+function canStay(p) {
+    return !isSolid(p) &&
+        (map[p]?.includes("tunnel") || isSolid([p[0], p[1] - 1]) || isSolid([p[0] - 1, p[1] - 1]) || isSolid([p[0] + 1, p[1] - 1]))
+}
+
 function canBreathe(p) {
     for (let dx = -1; dx <= 1; dx++)for (let dy = -1; dy <= 1; dy++) {
         let q = add(p, [dx, dy])
@@ -790,9 +796,9 @@ function tick() {
                 if (a == "dirt" && !targets[["dirt", b, c]]) toMine[[b, c]] = "draggers";
             }
         }
-        if (isAir(ant.p) && !canWalk(ant.p)) {
+        if (isAir(ant.p) && !canStay(ant.p)) {
             let below = add(ant.p, [0, -1])
-            assert(!isSolid(ant.p))
+            assert(!isSolid(below))
             if (!hasAnt(below)) {
                 ant.popTask(true) // this won't re-add an order on a dragged block. we may consider changing that.
                 ant.move(below)
