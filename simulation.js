@@ -90,13 +90,30 @@ class Ant {
             return ordrs[q] || (lookForAir && isAir(q) && !solidTypes.find(t => targets[[t, q]]))
         }
 
-        function hCost(q) {
-            // pathfinding heuristic 
+        function hCost(q,d) {
+            let wcount = 0
+            let dirtCount = 0
+            for (let dx = -1; dx <= 1; dx++)for (let dy = -1; dy <= 1; dy++) {
+                let p = add(q, [dx, dy])
+                let isw = map[p]?.includes("water")
+                wcount += isw
+                if (isDirt(p)) {
+                    if (draggers[["dirt",p]]) {dirtCount+= Math.min(1,4/d)}
+                    else if (targets[["worker",p]]) {dirtCount+= Math.min(1,40/d)}
+                    else {dirtCount += 1}
+                }
+                else if(targets["dirt",p] && map[p]?.includes("tunnel")){
+                    dirtCount += 0.5 - 1/d
+                }
+            }
+            let cost = 1
+            //cost+=(wcount**2)/Math.sqrt(d+1) // try not to walk through waterlogged places
+            let deathChance = (wcount/9)**(9-dirtCount)
+            cost += (-100)*Math.log(1-deathChance)
+            /*consider considering these
             if (!canWalk(q)) return 5
-            if (hasAnt(q)) return 2
-            if (!canBreathe(q)) return 10
-            if (map[q]?.includes("water")) return 7
-            return 1
+            if (hasAnt(q)) return 2*/
+            return cost
         }
 
         // This is a heap because that might help with efficiency if we try to reuse it

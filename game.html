@@ -19,33 +19,28 @@
             padding: 5px;
             pointer-events:none;
         }
-        #hud>.button{
-            pointer-events:initial;
-
-        }
         fieldset{
+            display: inline-block;
+            text-decoration:none;
+            border: 0px;
             pointer-events:initial;
-          text-decoration:none;
-          border: 0px;
         }
         fieldset > div{
+            background-color:#FFF2;
             display:inline-block;
         }
         fieldset input{
 
-          display:none;
+            display:none;
         }
         fieldset input + label > svg{
-          border:10px solid #0000;
-          /*display:none; TODO: fill this back in*/
+            border:10px solid #0000;
         }
         fieldset input:hover + label > svg{
-          border:10px solid #2F2;
-          /*display:none; TODO: fill this back in*/
+            border:10px solid #2F2;
         }
         fieldset input:checked + label > svg {
-          border:10px solid blue;
-          /*display:none; TODO: fill this back in*/
+            border:10px solid blue;
         }
     </style>
 </head>
