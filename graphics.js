@@ -45,7 +45,7 @@ function draw() {
         }
 
     }
-    ctx.setLineDash([5, 5])
+    ctx.setLineDash([(SQSZ-1)*2/7, (SQSZ-1)*2/9])
     for (let type in orders) {
         ctx.strokeStyle = colMap[type]
         for (let p in orders[type]) {
