@@ -73,7 +73,7 @@ class Ant {
             else if (type !== "worker") {
                 console.warn("search failed")
                 //throw new Error("search failed")
-                delayedOrders["worker"][start] = 5
+                delayedOrders["worker"][start] = 20
                 return
             }
         }
@@ -135,7 +135,7 @@ class Ant {
         }
     }
 
-    popTask(finishing) {
+    popTask(orderDragged) {
         //return type [type,plan], ["finished",locaton], "finished"
         if (!this.plan) return null
         let plan = this.plan
@@ -159,10 +159,10 @@ class Ant {
             if (type === "worker") { return ["finished", plan[0]] }
             else { return "finished" }
         }
-        /*if(!finishing && type!=="worker"){
-            if(orders[type][dragPos]){console.warn("didn't expect an order to already be there")}
+        if (orderDragged && type !== "worker") {
+            if (orders[type][dragPos]) { console.warn("didn't expect an order to already be there") }
             orders[type][dragPos] = true
-        }*/
+        }
         orders[type][target] = true
         return [type, plan]
     }
@@ -204,7 +204,7 @@ class Ant {
         this.move(src)
         if (thing == "tunnel") {
             // we just placed dirt as a tunnel in air; cancel plan (consider complete)
-            this.popTask(true)
+            this.popTask()
         }
     }
 
@@ -604,7 +604,7 @@ function isSolid(p) {
 }
 
 function isAir(p) {
-    return (p[1] >= 0 && !map[p]?.includes("tunnel") && !map[p]?.includes("dirt")
+    return (p[1] >= 0 && !map[p]?.includes("tunnel") && !isSolid(p)
         || map[p]?.includes("air"))
 }
 
@@ -788,6 +788,14 @@ function tick() {
             for (let m in draggers) {
                 let [a, b, c] = m.split(",")
                 if (a == "dirt" && !targets[["dirt", b, c]]) toMine[[b, c]] = "draggers";
+            }
+        }
+        if (isAir(ant.p) && !canWalk(ant.p)) {
+            let below = add(ant.p, [0, -1])
+            assert(!isSolid(ant.p))
+            if (!hasAnt(below)) {
+                ant.popTask(true) // this won't re-add an order on a dragged block. we may consider changing that.
+                ant.move(below)
             }
         }
         if (!ant.plan) {
