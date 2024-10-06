@@ -2,8 +2,8 @@ Clicking
   // just do it already
 
 Ant AI
-  search
-  collision behavior
+  // search
+  // collision behavior
   Give each ant its own colour to make it easier to see what's happening if lots of ants are bunched up
 
 
@@ -11,3 +11,19 @@ Fancier graphics
   I feel like this is optional. Animating water movement would be quite tricky
 
 
+Basic UI:
+  controls to just place dirt/just dig/both(current setting)
+  speed (increase, decrease, pause)
+
+One of the following:
+  Polish
+    audio
+      raindrop effects
+    allow explicitly building dirt vs tunnel
+    tutorial
+    make sure the core gameplay works decently
+      (i.e. do nothing and the queen dies, do a bit and she lives a while longer)
+  Stuff that isn't dirt(movable food/queen/grubs)
+    Important Idea: queen isn't an instance of Ant
+
+Find a screenshot that shows the right idea without solving the game
