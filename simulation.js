@@ -169,8 +169,8 @@ class Ant {
             else { return "finished" }
         }
         if (orderDragged && type !== "worker") {
-            if (orders[type][dragPos]) { console.warn("didn't expect an order to already be there") }
-            orders[type][dragPos] = true
+            if (orders["worker"][dragPos]) { console.warn("didn't expect an order to already be there") }
+            orders["worker"][dragPos] = true
         }
         orders[type][target] = true
         return [type, plan]
@@ -621,7 +621,7 @@ function concatPaths(p1, p2) {
     let idx
     for (let p of p1) {
         res.push(p)
-        if ((idx = p2.indexOf(p)) > -1) {
+        if ((idx = p2.findIndex(x => x + "" === p + "")) > -1) {
             res.push(...p2.slice(idx + 1))
             return res
         }
