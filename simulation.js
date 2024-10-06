@@ -16,7 +16,7 @@
 //   if orders["workers",p]:
 //     isDirt(p)
 
-let map = { "0,-1": ["tunnel"] }  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
+let map = {}  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
 
 
 let thingLists = {}
@@ -27,11 +27,16 @@ thingLists["tunnel"] = [[0, -1]]
 thingLists["ant"] = []
 let dirts = []
 
+solidTypes = ["dirt", "food", "grub", "queen"] // if we add stone, we may want to separate solid types from pushable types
+
 // Orders Could generalize by what the order needs:
 //   digging is dirt that needs an ant,
 //   building is air or tunnel that needs dirt
 //
-let orders = { "worker": {}, "dirt": {}, "queen": {} } // These are really Set()s because lists are objects
+let orders = { "worker": {} } // These are really Set()s because lists are objects
+for (let t of solidTypes) {
+    orders[t] = {}
+}
 
 
 let draggers = {} // tracks if anyone is dragging a particular thing {[thing,postion]:Ant}
@@ -108,12 +113,11 @@ class Ant {
         }
         else if (type == "dirt" && !lookForAir) {
             this.findTarget(type, start, true)
-        }else if (type!=="worker"){
-            console.error("search failed")
+        } else if (type !== "worker") {
+            console.warn("search failed")
             //throw new Error("search failed")
+            orders["worker"][start] = true // there shouldn't have been an order/target on start when we called this, so this shouldn't break invariants
         }
-        // targets[["worker", this.plan[0]]] = this
-        // this.dragging = undefined
     }
 
     popTask(finishing) {
@@ -153,8 +157,8 @@ class Ant {
         if (task === null || task === "finished" || task[0] === "finished") return
         // TODO: Remove assertion for efficiency before release
         // DO NOT REMOVE beforehand. it is a very useful test
-        for(let i=0;i<task[1].length;i++){
-            assert([...neighbs(task[1][i])].find(x => x==(i+1<task[1].length?task[1][i+1]:this.p)+"" ))
+        for (let i = 0; i < task[1].length; i++) {
+            assert([...neighbs(task[1][i])].find(x => x == (i + 1 < task[1].length ? task[1][i + 1] : this.p) + ""))
         }
         let [type, plan] = task
         let target = plan[0]
@@ -191,7 +195,6 @@ class Ant {
 
     followPlan() {
         console.info("following plan", this.plan, this.dragging)
-        let ant = this
         let other
         let l = this.plan.length
         if (l === 0) { // Plan is probably complete
@@ -234,7 +237,7 @@ class Ant {
                         // - if it has no task or is a worker, switch?
                         // - if its dragging... probably we wait. maybe a chance to hand off our plan and abandon theirs. 
                         if (!other.dragging) {
-                            console.info(this.idx,new Date(),"ant in way of dragging - swapping tasks")
+                            console.info(this.idx, new Date(), "ant in way of dragging - swapping tasks")
                             let myTask = this.popTask()
                             let otherTask = other.popTask()
 
@@ -244,7 +247,7 @@ class Ant {
                             other.giveTask(myTask)
 
                             if (!otherTask || otherTask === "finished") return
-                            if (otherTask[0] === "finished") otherTask = ["worker",[otherTask[1]]]
+                            if (otherTask[0] === "finished") otherTask = ["worker", [otherTask[1]]]
 
                             let [otherType, otherPlan] = otherTask
                             assert(otherType === "worker")
@@ -256,22 +259,23 @@ class Ant {
 
                         }
                         else {
-                            console.info(this.idx,new Date(),"want to push block into other ant which is also pushing something")
-                            if(other.plan[other.plan.length-2]+""==this.p+""){
-                                console.info(this.idx,new Date(),"swapping plans that push into each other")
+                            console.info(this.idx, new Date(), "want to push block into other ant which is also pushing something")
+                            if (other.plan[other.plan.length - 2] + "" == this.p + "") {
+                                console.info(this.idx, new Date(), "swapping plans that push into each other")
                                 let myTask = this.popTask() // did not finish
                                 let otherTask = other.popTask()// did not finish
+                                // for multiple different pushable types, the same object still goes with the same plan
                                 other.giveTask(myTask)
                                 this.giveTask(otherTask)
-                            }else{// probably fine to wait, but there are possible deadlocks involving several ants.
-                                if(rand()<0.03){
-                                    console.info(this.idx,new Date(),"randomly deciding to hand task to busy friend")
+                            } else {// probably fine to wait, but there are possible deadlocks involving several ants.
+                                if (rand() < 0.03) {
+                                    console.info(this.idx, new Date(), "randomly deciding to hand task to busy friend")
                                     let myTask = this.popTask() // did not finish
                                     let otherTask = other.popTask()// might have finished
                                     other.giveTask(myTask)
-                                    console.info(otherTask+"")
-                                    if(otherTask!=="finished" && otherTask[0]!="finished"){
-                                        orders["worker"][otherTask[1][otherTask[1].length-1]] = true
+                                    console.info(otherTask + "")
+                                    if (otherTask !== "finished" && otherTask[0] != "finished") {
+                                        orders["worker"][otherTask[1][otherTask[1].length - 1]] = true
                                     }
                                 }
                             }
@@ -281,27 +285,39 @@ class Ant {
                 else if (isAir(next)) {
                     this.doDrag()
                 }
-                else if (isDirt(next)) {
-                    if (other = draggers[["dirt", next]]) {
-                        // TODO: generalizing this to work with non-dirt pushables shouldn't be hard
-                        console.info(this.idx,new Date(),"Trying to push dirt into dirt someone else is trying to push")
-                        if(other.plan[other.plan.length-2]+""==next+""){
-                            console.info(this.idx,new Date(),"swapping tasks, shortening both :)")
-                                let myTask = this.popTask() // did not finish
-                                let otherTask = other.popTask()// did not finish
-                                //shorten both tasks, draggers handled by poptask
-                                myTask[1].pop()
-                                otherTask[1].pop()
-                                other.giveTask(myTask)
-                                this.giveTask(otherTask)
+                else if (isSolid(next)) {
+                    let nextType = getType(next)
+                    let curType = this.dragging
+                    if (other = draggers[[nextType, next]]) {
+                        console.info(this.idx, new Date(), "Trying to push dirt into dirt someone else is trying to push")
+                        if (other.plan[other.plan.length - 2] + "" == next + "") {
+                            console.info(this.idx, new Date(), "swapping tasks, shortening both :)")
+                            let myTask = this.popTask() // did not finish
+                            let otherTask = other.popTask()// did not finish
+                            //shorten both tasks, draggers handled by poptask
+                            myTask[1].pop()
+                            let cur = otherTask[1].pop()
+                            // for two dirts, we'd be done; each dirt is in the intended next step of the other plan
+
+                            // for other pushables, we should swap them 
+                            let res = swap(curType, cur, nextType, next)
+                            // could have pushed dirt into air like this - handle potential leftover orders
+                            if (res[0] === "tunnel") { // swap returns the result of the first type first - so this is the case of dirt (curType) becoming tunnel at position next
+                                delete orders["dirt"][next] // might not be an order here, but if there is (next step was the last step), remove it
+                            }
+                            else other.giveTask(myTask) // we dont give this task if it just finished by being pushed to air (myTask had next as its next step)
+                            if (res[1] == "tunnel") {
+                                delete orders["dirt"][cur]
+                            }
+                            else this.giveTask(otherTask)
                         }
-                        else{//Probably fine to wait, but there are possible deadlocks
-                            if(rand()<0.05){
-                            console.info(this.idx,new Date(),"swapping tasks and associated blocks")
+                        else {//Probably fine to wait, but there are possible deadlocks
+                            if (rand() < 0.05) {
+                                console.info(this.idx, new Date(), "swapping tasks and associated blocks")
                                 let myTask = this.popTask() // did not finish
                                 let otherTask = other.popTask()// might have finished
                                 // draggers handled by poptask
-                                if(otherTask=="finished"){otherTask = ["finished",[]] }
+                                if (otherTask == "finished") { otherTask = ["finished", []] }
                                 otherTask[1].push(myTask[1].pop())
                                 other.giveTask(myTask)
                                 this.giveTask(otherTask)
@@ -310,8 +326,8 @@ class Ant {
 
                     }
                     else {
-                        if ((other = targets[["worker", next]]) || orders["worker"][next]) {
-                            console.info(this.idx,new Date(),"encountered dirt, switching to drag it")
+                        if (((other = targets[["worker", next]]) || orders["worker"][next]) && nextType == curType) { // only try pushing along another thing of the same type
+                            console.info(this.idx, new Date(), "encountered dirt, switching to drag it")
                             let origPlan = this.plan
                             let origPos = this.p
                             origPlan.push(origPos)
@@ -345,15 +361,11 @@ class Ant {
                         }
                         else {
                             // wait for next turn and recalculate path around obstacle then
-                            console.info(this.idx,new Date(),"encountered dirt, rerouting")
+                            console.info(this.idx, new Date(), "encountered dirt, rerouting")
                             let t = this.popTask()
                             if (t != "finished" && t[0] != "finished") {
                                 this.giveTask(["worker", [t[1][t[1].length - 1]]])
                             }
-                            // could consider if we fail this reroute to continue like the ordered/targetted case -
-                            //  swap with current block, pick up new block and continue along old path
-                            //  and leaving the other block behind
-                            // this current implementation would be hard to do that with; we could compute the reroute directly with findTarget
                         }
                     }
                 }
@@ -374,13 +386,14 @@ class Ant {
                 return
             }
             else {
-                if (isDirt(next)) {
+                if (isSolid(next)) {
+                    let nextType = getType(next)
                     // ordered: done - find new plan
                     // targeted: switch plans with targeter
                     // dragged: switch path or wait 
                     // built: swap
                     if (orders["worker"][next]) {
-                        console.info(this.idx,new Date(),"found other order")
+                        console.info(this.idx, new Date(), "found other order")
                         let result = this.popTask()
                         let type
                         if (type = getType(next)) {
@@ -389,9 +402,9 @@ class Ant {
 
                     }
                     else if (other = targets[["worker", next]]) {
-                        if(other===this){
+                        if (other === this) {
                             console.warn("some sort of loop")
-                            assert(this.plan[0]+""===next+"")
+                            assert(this.plan[0] + "" === next + "")
                             this.popTask() // This won't say "finished", so we rely on giveTask to remove the order. If findTarget fails, this will leave the order there
                             let type
                             if (type = getType(next)) {
@@ -401,7 +414,7 @@ class Ant {
                         }
                         // append remainder of plan to its plan, switch ant with dirt, find new plan
 
-                        console.info(this.idx,new Date(),"found another targeted block - handing off plan")
+                        console.info(this.idx, new Date(), "found another targeted block - handing off plan")
 
                         let [otherType, otherPlan] = other.popTask()
                         assert(otherType === "finished" && otherPlan + "" === next + ""
@@ -409,7 +422,7 @@ class Ant {
 
                         let [myType, myPlan] = this.popTask() // this cannot be finished because next is someone else's target
                         assert(myType === "worker")
-                        if(otherType==="finished"){
+                        if (otherType === "finished") {
                             otherPlan = [otherPlan]
                         }
                         myPlan.pop() // last element is same as first element from otherplan
@@ -423,11 +436,11 @@ class Ant {
                         let newType = getType(next)
                         this.findTarget(newType, next)
                     }
-                    else if (other = draggers[["dirt", next]]) {
+                    else if (other = draggers[[nextType, next]]) {
                         // dragged dirt is in the way. relevant cases are if i'm in their way or not.
                         let otherNext = other.plan[other.plan.length - 2]
                         if (otherNext + "" === this.p + "") {
-                            console.info(this.idx,new Date(),"in the way of dragged path while not dragging - switching and performing a step")
+                            console.info(this.idx, new Date(), "in the way of dragged path while not dragging - switching and performing a step")
                             let myTask = this.popTask()
                             let otherTask = other.popTask()
                             this.giveTask(otherTask) // don't need to modify this path (now), block path hasn;t changed 
@@ -442,7 +455,7 @@ class Ant {
                         else {
                             // dragged block in our way, we are not in its way. seems sensible to wait (switching puts them in our situation again)
                             // may consider probibalistic switching 
-                            console.info(this.idx,new Date(),"dragged block in our way, we are not in its way - idling")
+                            console.info(this.idx, new Date(), "dragged block in our way, we are not in its way - idling")
                         }
                     }
                     else {
@@ -456,13 +469,13 @@ class Ant {
                         this.move(next)
                         this.plan.pop()
                         return*/
-                        console.info(this.idx,new Date(),"blocked, plan abandoned ")
+                        console.info(this.idx, new Date(), "blocked, plan abandoned ")
                         this.popTask()
                     }
                 }
                 else if (other = hasAnt(next)) {
                     if (!other.dragging) {
-                        console.info(this.idx,new Date(),"ant in way - swapping tasks")
+                        console.info(this.idx, new Date(), "ant in way - swapping tasks")
                         let myTask = this.popTask()
                         let otherTask = other.popTask()
 
@@ -472,8 +485,8 @@ class Ant {
                         other.giveTask([myType, myPlan])
 
                         if (!otherTask || otherTask === "finished") return
-                        if(otherTask[0] === "finished"){
-                            otherTask = ["worker",[otherTask[1]]] // we'll need to finish it properly
+                        if (otherTask[0] === "finished") {
+                            otherTask = ["worker", [otherTask[1]]] // we'll need to finish it properly
                         }
 
                         let [otherType, otherPlan] = otherTask
@@ -488,7 +501,7 @@ class Ant {
                         // im not dragging, they are
                         // im not in their way due to parity
                         // doing nothing seems like the sensible option here 
-                        console.info(this.idx,new Date(),"dragger in the way - idling")
+                        console.info(this.idx, new Date(), "dragger in the way - idling")
                         return
                     }
                 }
@@ -496,11 +509,11 @@ class Ant {
                     // we can't walk to where we want, but it's not because of dirt or ant. probably bc we pathed assuming dirt will be placed that has not yet arrived.
                     // sensible to abandon plan here; or wait.
                     if (!willWalk(next) || rand() < 0.1) {
-                        console.info(this.idx,new Date(),"can't advance, abandoning")
+                        console.info(this.idx, new Date(), "can't advance, abandoning")
                         this.popTask()
                     }
                     else {
-                        console.info(this.idx,new Date(),"can't advance right now, waiting")
+                        console.info(this.idx, new Date(), "can't advance right now, waiting")
                     } // wait
                 }
             }
@@ -522,23 +535,16 @@ function concatPaths(p1, p2) {
     return res
 }
 
-for (let x=0;x<5;x++){
-    //queen = new Ant([0, 0])
-    new Ant([x, 0])
-}
-queen = thingLists["ant"][0]
-queen.queen = false // TODO: don't make the queen an instance of Ant
-
+orderKind = "dirtTunnel" // TODO: proper UI for this. currently set it manually in console to test ordering different things. 
 function sel(p) {
-    if (!targets[["worker", p]] && isDirt(p) && !draggers[["dirt", p]]) {
+    if (!targets[["worker", p]] && isSolid(p) && !(solidTypes.find(t => draggers[[t, p]])) && (orderKind == "dirtTunnel" || orderKind == "tunnel")) {
         orders["worker"][p] = true
     }
-    if (isAir(p) && !targets[["dirt", p]]) {
+    if (!isSolid(p) && !targets[["dirt", p]] && (orderKind === "dirtTunnel")) {
         orders["dirt"][p] = true
     }
-    if (map[p]?.includes("tunnel") && !targets[["dirt", p]]) {
-        assert(!isDirt(p))
-        orders["dirt"][p] = true
+    if (!isSolid(p) && !targets[[orderKind, p]] && solidTypes.includes(orderKind)) {
+        orders[orderKind][p] = true
     }
     // console.log(p)
     redraw()
@@ -555,6 +561,15 @@ function isDirt(p) {
         || map[p]?.includes("dirt"))
 }
 
+
+function isSolid(p) {
+    if (isDirt(p)) return true
+    for (let t of solidTypes) {
+        if (map[p]?.includes(t)) return true
+    }
+    return false
+}
+
 function isAir(p) {
     return (p[1] >= 0 && !map[p]?.includes("tunnel") && !map[p]?.includes("dirt")
         || map[p]?.includes("air"))
@@ -564,7 +579,11 @@ function getType(p) {
     // assert(isDirt(p)) <- would like to do this, but it fails sometimes and it probably not too bad if it happens
 
     if (isDirt(p)) return "dirt"
-    else console.warn("Couldn't find dirt where expected")
+    for (let t of solidTypes) {
+        if (map[p]?.includes(t)) return t
+    }
+
+    assert(false, "expected solid type")
 }
 
 function hasAnt(p) {
@@ -573,7 +592,7 @@ function hasAnt(p) {
 
 function canWalk(p) {
     return !isDirt(p) && !hasAnt(p) &&
-        (map[p]?.includes("tunnel") || isDirt([p[0], p[1] - 1]) || isDirt([p[0] - 1, p[1] - 1]) || isDirt([p[0] + 1, p[1] - 1]))
+        (map[p]?.includes("tunnel") || isSolid([p[0], p[1] - 1]) || isSolid([p[0] - 1, p[1] - 1]) || isSolid([p[0] + 1, p[1] - 1]))
 }
 function canBreathe(p) {
     for (let dx = -1; dx <= 1; dx++)for (let dy = -1; dy <= 1; dy++) {
@@ -591,11 +610,19 @@ function willBeDirt(p) {
         || (targets[["dirt", p]] && map[p]?.includes("tunnel")))
 }
 
+function willBeSolid(p) {
+    if (isDirt(p)) return true
+    for (let t of solidTypes) {
+        if ((map[p]?.includes(t)) || targets[[t, p]] && t !== "dirt") return true
+    }
+    return false
+}
+
 function willWalk(p) {
-    return ((!isDirt(p) &&
-        (map[p]?.includes("tunnel") || willBeDirt([p[0], p[1] - 1]) || willBeDirt([p[0] - 1, p[1] - 1]) || willBeDirt([p[0] + 1, p[1] - 1]))
-        || targets[["worker", p]] || draggers[["dirt", p]] || orders["worker"][p])
-        )
+    return ((!isSolid(p) &&
+        (map[p]?.includes("tunnel") || willBeSolid([p[0], p[1] - 1]) || willBeSolid([p[0] - 1, p[1] - 1]) || willBeSolid([p[0] + 1, p[1] - 1]))
+        || targets[["worker", p]] || solidTypes.find(t => draggers[[t, p]]) || orders["worker"][p])
+    )
 }
 
 
@@ -629,6 +656,14 @@ function put(thing, dst) {
 function move(thing, src, dst) {
     take(thing, src)
     return put(thing, dst)
+}
+
+function swap(thing1, p1, thing2, p2) {
+    take(thing1, p1)
+    take(thing2, p2)
+    r1 = put(thing1, p2)
+    r2 = put(thing2, p1)
+    return [r1, r2]
 }
 
 const rand = Math.random
@@ -695,23 +730,23 @@ function tick() {
     // (particularly to avoid searching a large empty region multiple times)
 
     for (let ant of thingLists["ant"]) {
-            debug=true
-            if(debug){
-                var s = ant.plan+""
-                var d = ant.dragging
-                var toMine = {}
-                for(let k in orders["worker"]){
-                    toMine[k]="orders"
-                }
-                for(let m in targets){
-                    let [a,b,c] = m.split(",")
-                    if (a=="worker") toMine[[b,c]]="targets";
-                }
-                for(let m in draggers){
-                    let [a,b,c] = m.split(",")
-                    if (a=="dirt" && !targets[["dirt",b,c]]) toMine[[b,c]]="draggers";
-                }
+        debug = true
+        if (debug) {
+            var s = ant.plan + ""
+            var d = ant.dragging
+            var toMine = {}
+            for (let k in orders["worker"]) {
+                toMine[k] = "orders"
             }
+            for (let m in targets) {
+                let [a, b, c] = m.split(",")
+                if (a == "worker") toMine[[b, c]] = "targets";
+            }
+            for (let m in draggers) {
+                let [a, b, c] = m.split(",")
+                if (a == "dirt" && !targets[["dirt", b, c]]) toMine[[b, c]] = "draggers";
+            }
+        }
         if (!ant.plan) {
             console.log("finding target")
             ant.findTarget("worker")
@@ -719,19 +754,19 @@ function tick() {
         if (ant.plan) { // Execute plan
             ant.followPlan()
         }
-            if(debug){
-                for (let p in toMine){
-                    if (isDirt(p)){
-                        if (orders["worker"][p]) continue
-                        if ( targets[["worker",p]]) continue
-                        if (draggers[["dirt",p]]) continue
-                        console.error(s,d,ant,toMine[p])
-                        throw Error
-                        let x=0
-                    }
-                    //throw new Error(p+" was added by this ant")
+        if (debug) {
+            for (let p in toMine) {
+                if (isDirt(p)) {
+                    if (orders["worker"][p]) continue
+                    if (targets[["worker", p]]) continue
+                    if (draggers[["dirt", p]]) continue
+                    console.error(s, d, ant, toMine[p])
+                    throw Error // this can happen legitemately (order got removed) if a search failed
+                    // perhaps if we fail a search we could keep an order on it?
                 }
+                //throw new Error(p+" was added by this ant")
             }
+        }
     }
     draw()
 }
@@ -775,3 +810,19 @@ function inBounds(p) {
 }
 
 let defined = undefined
+
+
+// Starting configuration 
+
+take("dirt", [0, -1])
+
+for (let x = 0; x < 5; x++) {
+    //queen = new Ant([0, 0])
+    new Ant([x, 0])
+
+    take("dirt", [2 * x, -3])
+    put("food", [2 * x, -3])
+}
+queen = thingLists["ant"][0]
+queen.queen = false // TODO: don't make the queen an instance of Ant
+
