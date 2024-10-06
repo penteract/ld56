@@ -1004,8 +1004,8 @@ for (let x = 0; x < 5; x++) {
     //queen = new Ant([0, 0])
     new Ant([x, 0])
 
-    take("dirt", [2 * x, -3])
-    put("food", [2 * x, -3])
+    //take("dirt", [2 * x, -3])
+    //put("food", [2 * x, -3])
 }
 
 queen = new Queen([-1, 0])
