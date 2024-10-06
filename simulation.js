@@ -80,8 +80,7 @@ class Ant {
         if (Object.keys(ordrs).length === 0) {
             if (type == "dirt") lookForAir = true
             else if (type !== "worker") {
-                console.warn("search failed")
-                //throw new Error("search failed")
+                console.info("search failed (no orders)")
                 delayedOrders["worker"][start] = 20
                 return
             }
@@ -820,6 +819,7 @@ function tick() {
         for (let p in delayedOrders[t]) {
             if (!delayedOrders[t][p]) {
                 setOrder(p, t)
+                delete delayedOrders[t][p]
             }
             else {
                 delayedOrders[t][p] -= 1
