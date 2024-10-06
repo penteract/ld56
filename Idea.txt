@@ -89,3 +89,14 @@ Sun  6 Oct 07:50:02 BST 2024
   It should be possible to designate the queen's home and to designate tiles as part of a grub nursery (so grubs automatically get moved there by free workers).
 
   If it's raining where you are, consider recording it for background music :)
+
+
+UI:
+ large square buttons with icon colors matching material.
+ shovel for dirt, brown square for "place dirt"
+ Queen should have at most 1 ordered destination
+ Queen and grubs work the opposite way to dirt - they should be moved iff they have destinations set
+   (and for grubs, they must not be in a marked nursery)
+  (as opposed to dirt which should be moved iff it's been ordered to be dug out)
+    This adds some complication.
+  if the ant's search encounters a grub or queen, it moves there if there is any free destination (e.g. orders["grub"] is not empty and is reachable (computing reachability is tricky))
