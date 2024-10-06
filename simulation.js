@@ -105,6 +105,9 @@ class Ant {
         }
         else if (type == "dirt" && !lookForAir) {
             this.findTarget(type, start, true)
+        }else if (type!=="worker"){
+            console.error("search failed")
+            //throw new Error("search failed")
         }
         // targets[["worker", this.plan[0]]] = this
         // this.dragging = undefined
@@ -237,7 +240,8 @@ class Ant {
                             // the path of the block hasn't changed, so we don't modify the task
                             other.giveTask(myTask)
 
-                            if (!otherTask || otherTask === "finished" || otherTask[0] === "finished") return
+                            if (!otherTask || otherTask === "finished") return
+                            if (otherTask[0] === "finished") otherTask = ["worker",[otherTask[1]]]
 
                             let [otherType, otherPlan] = otherTask
                             assert(otherType === "worker")
@@ -262,8 +266,9 @@ class Ant {
                                     let myTask = this.popTask() // did not finish
                                     let otherTask = other.popTask()// might have finished
                                     other.giveTask(myTask)
+                                    console.info(otherTask+"")
                                     if(otherTask!=="finished" && otherTask[0]!="finished"){
-                                        orders["worker"][otherTask[otherTask.length-1]] = true
+                                        orders["worker"][otherTask[1][otherTask[1].length-1]] = true
                                     }
                                 }
                             }
@@ -584,8 +589,10 @@ function willBeDirt(p) {
 }
 
 function willWalk(p) {
-    return (!isDirt(p) || targets[["worker", p]] || draggers[["dirt", p]]) &&
+    return ((!isDirt(p) &&
         (map[p]?.includes("tunnel") || willBeDirt([p[0], p[1] - 1]) || willBeDirt([p[0] - 1, p[1] - 1]) || willBeDirt([p[0] + 1, p[1] - 1]))
+        || targets[["worker", p]] || draggers[["dirt", p]] || orders["worker"][p])
+        )
 }
 
 
@@ -685,10 +692,6 @@ function tick() {
     // (particularly to avoid searching a large empty region multiple times)
 
     for (let ant of ants) {
-        if (!ant.plan) {
-            ant.findTarget("worker")
-        }
-        if (ant.plan) { // Execute plan
             debug=true
             if(debug){
                 var s = ant.plan+""
@@ -706,7 +709,13 @@ function tick() {
                     if (a=="dirt" && !targets[["dirt",b,c]]) toMine[[b,c]]="draggers";
                 }
             }
+        if (!ant.plan) {
+            console.log("finding target")
+            ant.findTarget("worker")
+        }
+        if (ant.plan) { // Execute plan
             ant.followPlan()
+        }
             if(debug){
                 for (let p in toMine){
                     if (isDirt(p)){
@@ -714,12 +723,12 @@ function tick() {
                         if ( targets[["worker",p]]) continue
                         if (draggers[["dirt",p]]) continue
                         console.error(s,d,ant,toMine[p])
+                        throw Error
                         let x=0
                     }
                     //throw new Error(p+" was added by this ant")
                 }
             }
-        }
     }
     draw()
 }

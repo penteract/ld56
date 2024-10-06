@@ -36,3 +36,5 @@ Optional:
 
 
 
+ Current confusing behavior:
+   If an ant decides to drop some dirt, ready to recalculate paths next turn, that dropped dirt interferes with other ants pathfinding, causing them to 'correctly' abandon attempts to take dirt somewhere useful?
