@@ -220,7 +220,6 @@ class Ant {
                         return
                     }
                     else {
-                        // TODO
                         // other ant in the way of our dragging
                         // - if it has no task or is a worker, switch?
                         // - if its dragging... probably we wait. maybe a chance to hand off our plan and abandon theirs. 
@@ -246,8 +245,24 @@ class Ant {
 
                         }
                         else {
-                            // TODO
-                            assert(false)
+                            console.info("want to push block into other ant which is also pushing something")
+                            if(other.plan[other.plan.length-2]+""==this.p+""){
+                                console.info("swapping plans that push into each other")
+                                let myTask = this.popTask() // did not finish
+                                let otherTask = other.popTask()// might have finished
+                                other.giveTask(myTask)
+                                this.giveTask(otherTask)
+                            }else{// probably fine to wait, but there are possible deadlocks involving several ants.
+                                if(rand()<0.03){
+                                    console.info("randomly deciding to hand task to busy friend")
+                                    let myTask = this.popTask() // did not finish
+                                    let otherTask = other.popTask()// might have finished
+                                    other.giveTask(myTask)
+                                    if(otherTask!=="finished" && otherTask[0]!="finished"){
+                                        orders["worker"][otherTask[otherTask.length-1]] = true
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -256,7 +271,31 @@ class Ant {
                 }
                 else if (isDirt(next)) {
                     if (other = draggers[["dirt", next]]) {
-                        assert(false)
+                        // TODO: generalizing this to work with non-dirt pushables shouldn't be hard
+                        console.info("Trying to push dirt into dirt someone else is trying to push")
+                        if(other.plan[other.plan.length-2]+""==next+""){
+                            console.info("swapping tasks, shortening both :)")
+                                let myTask = this.popTask() // did not finish
+                                let otherTask = other.popTask()// did not finish
+                                //shorten both tasks, draggers handled by poptask
+                                mytask[1].pop()
+                                otherTask[1].pop()
+                                other.giveTask(myTask)
+                                this.giveTask(otherTask)
+                        }
+                        else{//Probably fine to wait, but there are possible deadlocks
+                            if(rand()<0.05){
+                            console.info("swapping tasks and associated blocks")
+                                let myTask = this.popTask() // did not finish
+                                let otherTask = other.popTask()// might have finished
+                                // draggers handled by poptask
+                                if(otherTask=="finished"){otherTask = ["finished",[]] }
+                                otherTask[1].push(mytask[1].pop())
+                                other.giveTask(myTask)
+                                this.giveTask(otherTask)
+                            }
+                        }
+
                     }
                     else {
                         if ((other = targets[["worker", next]]) || orders["worker"][next]) {
@@ -339,6 +378,14 @@ class Ant {
                     }
                     else if (other = targets[["worker", next]]) {
                         // append remainder of plan to its plan, switch ant with dirt, find new plan
+                        if(other===this){
+                            console.warn("some sort of loop")
+                            assert(this.plan[0]+""===next+"")
+                            if (type = getType(next)) {
+                                this.findTarget(type, next)
+                            }
+                            return
+                        }
 
                         console.info("found another targeted block - handing off plan")
 
@@ -424,7 +471,7 @@ class Ant {
                     // sensible to abandon plan here; or wait.
                     if (!willWalk(next) || rand() < 0.1) {
                         console.info("can't advance, abandoning")
-                        this.popPlan()
+                        this.popTask()
                     }
                     else {
                         console.info("can't advance right now, waiting")
