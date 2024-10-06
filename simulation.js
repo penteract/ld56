@@ -34,8 +34,10 @@ solidTypes = ["dirt", "food", "grub", "queen"] // if we add stone, we may want t
 //   building is air or tunnel that needs dirt
 //
 let orders = { "worker": {} } // These are really Set()s because lists are objects
+let delayedOrders = { "worker": {} }
 for (let t of solidTypes) {
     orders[t] = {}
+    delayedOrders[t] = {}
 }
 
 
@@ -68,11 +70,25 @@ class Ant {
         let ordrs = orders[type]
         if (Object.keys(ordrs).length === 0) {
             if (type == "dirt") lookForAir = true
-            else return
+            else if (type !== "worker") {
+                console.warn("search failed")
+                //throw new Error("search failed")
+                delayedOrders["worker"][start] = 5
+                return
+            }
         }
 
         function validOrder(q) {
             return ordrs[q] || (lookForAir && isAir(q) && !targets[[type, q]])
+        }
+
+        function hCost(q) {
+            // pathfinding heuristic 
+            if (!canWalk(q)) return 5
+            if (hasAnt(q)) return 2
+            if (!canBreathe(q)) return 10
+            if (map[q]?.includes("water")) return 7
+            return 1
         }
 
         // This is a heap because that might help with efficiency if we try to reuse it
@@ -99,8 +115,7 @@ class Ant {
                     if (validOrder(q)) {
                         found = [q, path]
                     }
-                    heappush(heap, d + 1, [q, path])
-                    // Could use heuristics to avoid busy areas, increase d by 2 if the cell is occupied by another ant
+                    heappush(heap, d + hCost(q), [q, path])
                 }
             }
         }
@@ -116,7 +131,7 @@ class Ant {
         } else if (type !== "worker") {
             console.warn("search failed")
             //throw new Error("search failed")
-            orders["worker"][start] = true // there shouldn't have been an order/target on start when we called this, so this shouldn't break invariants
+            delayedOrders["worker"][start] = 5
         }
     }
 
@@ -303,7 +318,9 @@ class Ant {
                             let res = swap(curType, cur, nextType, next)
                             // could have pushed dirt into air like this - handle potential leftover orders
                             if (res[0] === "tunnel") { // swap returns the result of the first type first - so this is the case of dirt (curType) becoming tunnel at position next
-                                delete orders["dirt"][next] // might not be an order here, but if there is (next step was the last step), remove it
+                                // might not be an order here, but if there is (next step was the last step), remove it
+                                // the order will only be for dirt, not any other type
+                                delete orders["dirt"][next]
                             }
                             else other.giveTask(myTask) // we dont give this task if it just finished by being pushed to air (myTask had next as its next step)
                             if (res[1] == "tunnel") {
@@ -329,6 +346,7 @@ class Ant {
                         if (((other = targets[["worker", next]]) || orders["worker"][next]) && nextType == curType) { // only try pushing along another thing of the same type
                             console.info(this.idx, new Date(), "encountered dirt, switching to drag it")
                             let origPlan = this.plan
+                            let origType = this.dragging
                             let origPos = this.p
                             origPlan.push(origPos)
                             origPlan.push(origPlan[origPlan.length - 2])
@@ -357,7 +375,7 @@ class Ant {
                                 // the following call to giveTask removes the original order on next
                                 orders["worker"][origPos] = true
                             }
-                            this.giveTask(["dirt", origPlan])
+                            this.giveTask([origType, origPlan])
                         }
                         else {
                             // wait for next turn and recalculate path around obstacle then
@@ -537,18 +555,41 @@ function concatPaths(p1, p2) {
 
 orderKind = "dirtTunnel" // TODO: proper UI for this. currently set it manually in console to test ordering different things. 
 function sel(p) {
-    if (!targets[["worker", p]] && isSolid(p) && !(solidTypes.find(t => draggers[[t, p]])) && (orderKind == "dirtTunnel" || orderKind == "tunnel")) {
-        orders["worker"][p] = true
+    if (orderKind === "dirtTunnel") {
+        setOrder(p, "worker") || setOrder(p, "dirt")
     }
-    if (!isSolid(p) && !targets[["dirt", p]] && (orderKind === "dirtTunnel")) {
-        orders["dirt"][p] = true
+    else {
+        setOrder(p, orderKind)
     }
-    if (!isSolid(p) && !targets[[orderKind, p]] && solidTypes.includes(orderKind)) {
-        orders[orderKind][p] = true
-    }
-    // console.log(p)
     redraw()
 }
+
+function setOrder(p, type) {
+    // sets an order of the specified type if able, upholding invariants. returns true if successful
+    if (type == "worker") {
+        if (!targets[["worker", p]] && !orders["worker"][p] && isSolid(p) && !(solidTypes.find(t => draggers[[t, p]]))) {
+            orders["worker"][p] = true
+            return true
+        }
+    }
+    else {
+        if (!isSolid(p) && !(solidTypes.find(t => targets[[t, p]] || orders[t][p]))) {
+            orders[type][p] = true
+            return true
+        }
+    }
+    return false
+}
+
+function clearOrder(p) {
+    res = false
+    for (let t in orders) {
+        res ||= orders[t][p]
+        delete orders[t][p]
+    }
+    return res
+}
+
 //put("water", [10, 2])
 //water.push([10, 2])
 
@@ -591,7 +632,7 @@ function hasAnt(p) {
 }
 
 function canWalk(p) {
-    return !isDirt(p) && !hasAnt(p) &&
+    return !isSolid(p) && !hasAnt(p) &&
         (map[p]?.includes("tunnel") || isSolid([p[0], p[1] - 1]) || isSolid([p[0] - 1, p[1] - 1]) || isSolid([p[0] + 1, p[1] - 1]))
 }
 function canBreathe(p) {
@@ -694,6 +735,16 @@ tickCount = 0
 
 function tick() {
     tickCount += 1
+    for (let t in delayedOrders) {
+        for (let p in delayedOrders[t]) {
+            if (!delayedOrders[t][p]) {
+                setOrder(p, t)
+            }
+            else {
+                delayedOrders[t][p] -= 1
+            }
+        }
+    }
     RainProb = (1 + Math.sin(tickCount / 100)) ** 2 * 0.01
     // Should this vary by x coordinate? That would mean you'd have to deal with floods coming from the sides, as well as just rain from above
     let newWater = []
@@ -760,6 +811,7 @@ function tick() {
                     if (orders["worker"][p]) continue
                     if (targets[["worker", p]]) continue
                     if (draggers[["dirt", p]]) continue
+                    if (delayedOrders["worker"][p]) continue
                     console.error(s, d, ant, toMine[p])
                     throw Error // this can happen legitemately (order got removed) if a search failed
                     // perhaps if we fail a search we could keep an order on it?
@@ -822,6 +874,8 @@ for (let x = 0; x < 5; x++) {
 
     take("dirt", [2 * x, -3])
     put("food", [2 * x, -3])
+
+    put("queen", [-1, 0])
 }
 queen = thingLists["ant"][0]
 queen.queen = false // TODO: don't make the queen an instance of Ant
