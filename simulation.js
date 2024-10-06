@@ -228,7 +228,7 @@ class Ant {
                         // - if it has no task or is a worker, switch?
                         // - if its dragging... probably we wait. maybe a chance to hand off our plan and abandon theirs. 
                         if (!other.dragging) {
-                            console.info("ant in way of dragging - swapping tasks")
+                            console.info(this.idx,new Date(),"ant in way of dragging - swapping tasks")
                             let myTask = this.popTask()
                             let otherTask = other.popTask()
 
@@ -249,16 +249,16 @@ class Ant {
 
                         }
                         else {
-                            console.info("want to push block into other ant which is also pushing something")
+                            console.info(this.idx,new Date(),"want to push block into other ant which is also pushing something")
                             if(other.plan[other.plan.length-2]+""==this.p+""){
-                                console.info("swapping plans that push into each other")
+                                console.info(this.idx,new Date(),"swapping plans that push into each other")
                                 let myTask = this.popTask() // did not finish
                                 let otherTask = other.popTask()// did not finish
                                 other.giveTask(myTask)
                                 this.giveTask(otherTask)
                             }else{// probably fine to wait, but there are possible deadlocks involving several ants.
                                 if(rand()<0.03){
-                                    console.info("randomly deciding to hand task to busy friend")
+                                    console.info(this.idx,new Date(),"randomly deciding to hand task to busy friend")
                                     let myTask = this.popTask() // did not finish
                                     let otherTask = other.popTask()// might have finished
                                     other.giveTask(myTask)
@@ -276,9 +276,9 @@ class Ant {
                 else if (isDirt(next)) {
                     if (other = draggers[["dirt", next]]) {
                         // TODO: generalizing this to work with non-dirt pushables shouldn't be hard
-                        console.info("Trying to push dirt into dirt someone else is trying to push")
+                        console.info(this.idx,new Date(),"Trying to push dirt into dirt someone else is trying to push")
                         if(other.plan[other.plan.length-2]+""==next+""){
-                            console.info("swapping tasks, shortening both :)")
+                            console.info(this.idx,new Date(),"swapping tasks, shortening both :)")
                                 let myTask = this.popTask() // did not finish
                                 let otherTask = other.popTask()// did not finish
                                 //shorten both tasks, draggers handled by poptask
@@ -289,7 +289,7 @@ class Ant {
                         }
                         else{//Probably fine to wait, but there are possible deadlocks
                             if(rand()<0.05){
-                            console.info("swapping tasks and associated blocks")
+                            console.info(this.idx,new Date(),"swapping tasks and associated blocks")
                                 let myTask = this.popTask() // did not finish
                                 let otherTask = other.popTask()// might have finished
                                 // draggers handled by poptask
@@ -303,7 +303,7 @@ class Ant {
                     }
                     else {
                         if ((other = targets[["worker", next]]) || orders["worker"][next]) {
-                            console.info("encountered dirt, switching to drag it")
+                            console.info(this.idx,new Date(),"encountered dirt, switching to drag it")
                             let origPlan = this.plan
                             let origPos = this.p
                             origPlan.push(origPos)
@@ -337,7 +337,7 @@ class Ant {
                         }
                         else {
                             // wait for next turn and recalculate path around obstacle then
-                            console.info("encountered dirt, rerouting")
+                            console.info(this.idx,new Date(),"encountered dirt, rerouting")
                             let t = this.popTask()
                             if (t != "finished" && t[0] != "finished") {
                                 this.giveTask(["worker", [t[1][t[1].length - 1]]])
@@ -372,7 +372,7 @@ class Ant {
                     // dragged: switch path or wait 
                     // built: swap
                     if (orders["worker"][next]) {
-                        console.info("found other order")
+                        console.info(this.idx,new Date(),"found other order")
                         let result = this.popTask()
                         let type
                         if (type = getType(next)) {
@@ -393,7 +393,7 @@ class Ant {
                         }
                         // append remainder of plan to its plan, switch ant with dirt, find new plan
 
-                        console.info("found another targeted block - handing off plan")
+                        console.info(this.idx,new Date(),"found another targeted block - handing off plan")
 
                         let [otherType, otherPlan] = other.popTask()
                         assert(otherType === "finished" && otherPlan + "" === next + ""
@@ -419,14 +419,14 @@ class Ant {
                         // dragged dirt is in the way. relevant cases are if i'm in their way or not.
                         let otherNext = other.plan[other.plan.length - 2]
                         if (otherNext + "" === this.p + "") {
-                            console.info("in the way of dragged path while not dragging - switching and performing a step")
+                            console.info(this.idx,new Date(),"in the way of dragged path while not dragging - switching and performing a step")
                             let myTask = this.popTask()
                             let otherTask = other.popTask()
                             this.giveTask(otherTask) // don't need to modify this path (now), block path hasn;t changed 
                             this.doDrag()
 
                             if (myTask[1][myTask[1].length - 2] + "" === other.p + "") {
-                                console.log("simplifying path")
+                                //console.log("simplifying path")
                                 myTask[1].length -= 2
                             }
                             other.giveTask(myTask)
@@ -434,7 +434,7 @@ class Ant {
                         else {
                             // dragged block in our way, we are not in its way. seems sensible to wait (switching puts them in our situation again)
                             // may consider probibalistic switching 
-                            console.info("dragged block in our way, we are not in its way - idling")
+                            console.info(this.idx,new Date(),"dragged block in our way, we are not in its way - idling")
                         }
                     }
                     else {
@@ -443,18 +443,18 @@ class Ant {
                          * and would cause other problems)
                          * this puts more dirt in the way of other ants, and its own path back,
                          * causing lots of ants to end up stuck in the middle of dirt from which its hard to get them out
-                        console.info("placed block in way - swapping")
+                        console.info(this.idx,new Date(),"placed block in way - swapping")
                         move("dirt", next, this.p)
                         this.move(next)
                         this.plan.pop()
                         return*/
-                        console.info("blocked, plan abandoned ")
+                        console.info(this.idx,new Date(),"blocked, plan abandoned ")
                         this.popTask()
                     }
                 }
                 else if (other = hasAnt(next)) {
                     if (!other.dragging) {
-                        console.info("ant in way - swapping tasks")
+                        console.info(this.idx,new Date(),"ant in way - swapping tasks")
                         let myTask = this.popTask()
                         let otherTask = other.popTask()
 
@@ -463,7 +463,10 @@ class Ant {
 
                         other.giveTask([myType, myPlan])
 
-                        if (!otherTask || otherTask === "finished" || otherTask[0] === "finished") return
+                        if (!otherTask || otherTask === "finished") return
+                        if(otherTask[0] === "finished"){
+                            otherTask = ["worker",[otherTask[1]]] // we'll need to finish it properly
+                        }
 
                         let [otherType, otherPlan] = otherTask
                         assert(otherType === "worker")
@@ -477,7 +480,7 @@ class Ant {
                         // im not dragging, they are
                         // im not in their way due to parity
                         // doing nothing seems like the sensible option here 
-                        console.info("dragger in the way - idling")
+                        console.info(this.idx,new Date(),"dragger in the way - idling")
                         return
                     }
                 }
@@ -485,11 +488,11 @@ class Ant {
                     // we can't walk to where we want, but it's not because of dirt or ant. probably bc we pathed assuming dirt will be placed that has not yet arrived.
                     // sensible to abandon plan here; or wait.
                     if (!willWalk(next) || rand() < 0.1) {
-                        console.info("can't advance, abandoning")
+                        console.info(this.idx,new Date(),"can't advance, abandoning")
                         this.popTask()
                     }
                     else {
-                        console.info("can't advance right now, waiting")
+                        console.info(this.idx,new Date(),"can't advance right now, waiting")
                     } // wait
                 }
             }
