@@ -6,6 +6,16 @@ TUNNEL_COL = "sandyBrown"
 
 STROKEWIDTH = 1
 
+colMap = {
+    "dirt" : "Sienna",
+    "tunnel" : "sandyBrown",
+    "ant" : "darkred",
+    "worker" : "darkred",
+    "queen" : "#4b006e", //"#7851a9"
+    "grub" : "seashell",
+    "water" : "#00F8"
+}
+
 function draw() {
     ctx.fillStyle = "skyblue" // good color for the sky
     ctx.fillRect(SQSZ * minx, 0, SQSZ * (maxx - minx + 1), SQSZ * (maxy + 1))
@@ -25,16 +35,42 @@ function draw() {
         }
 
     }
+    for (let type of ["ant","water"]){
+        ctx.fillStyle = colMap[type]
+        for (let thing of thingLists[type]){
+            if(thing.p){
+                ctx.fillRect(thing.p[0] * SQSZ, thing.p[1] * SQSZ, SQSZ, SQSZ)
+            }
+            else{
+                ctx.fillRect(thing[0] * SQSZ, thing[1] * SQSZ, SQSZ, SQSZ)
+            }
+        }
+    }
+    //}
+    ctx.setLineDash([5,5])
+    for (let type of ["worker","dirt"]){
+        ctx.strokeStyle = colMap[type]
+        for(let p in orders[type]){
+            let [x,y] = p.split(",")
+            ctx.strokeRect(SQSZ * x + STROKEWIDTH/2  , SQSZ * y + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
+        }
+    }
+    ctx.setLineDash([])
+    for(let wp in targets){
+        let [thing,x,y] = wp.split(",")
+        ctx.strokeStyle = colMap[thing]
+        ctx.strokeRect(SQSZ * x + STROKEWIDTH/2  , SQSZ * y + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
+    }
 
-    ctx.fillStyle = "darkred"
+/*    ctx.fillStyle = "darkred"
     for (let ant of ants) {
         ctx.fillRect(ant.p[0] * SQSZ, ant.p[1] * SQSZ, SQSZ, SQSZ)
     }
     ctx.fillStyle = "#00F8"
     for (let p of water) {
         ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
-    }
-    ctx.strokeStyle = "#F00"
+    }*/
+/*    ctx.strokeStyle = "#F00"
     for (let p in orders["worker"]) if (orders["worker"][p]) {
         p = p.split(",")
         ctx.strokeRect(SQSZ * p[0] + STROKEWIDTH/2  , SQSZ * p[1] + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
@@ -49,7 +85,7 @@ function draw() {
         if (wp[0] = "worker") {
             ctx.strokeRect(SQSZ * wp[1] + STROKEWIDTH/2  , SQSZ * wp[2] + STROKEWIDTH/2, SQSZ- STROKEWIDTH, SQSZ - STROKEWIDTH)
         }
-    }
+    }*/
 }
 
 

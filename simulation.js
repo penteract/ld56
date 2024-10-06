@@ -16,11 +16,15 @@
 //   if orders["workers",p]:
 //     isDirt(p)
 
-
-
 let map = { "0,-1": ["tunnel"] }  // "x,y" : ["water"|"tunnel"|"dirt"|Ant|"toDig"|"toBuild"]
-let water = [] //[[1,-2]] // immutable?
-let tunnels = [[0, -1]]
+
+
+let thingLists = {}
+
+
+thingLists["water"] = [] //[[1,-2]] // immutable?
+thingLists["tunnel"] = [[0, -1]]
+thingLists["ant"] = []
 let dirts = []
 
 // Orders Could generalize by what the order needs:
@@ -34,16 +38,15 @@ let draggers = {} // tracks if anyone is dragging a particular thing {[thing,pos
 let targets = {} // tracks if anyone is targeting a particular position {[task,postion]:Ant}
 
 
-const ants = []
+//const ants = []
 class Ant {
     constructor(p) {
-        this.queen = false
         this.plan = null
         this.dragging = null // thing (e.g. "dirt")
-        this.idx = ants.length
+        this.idx = thingLists["ant"].length
         this.p = p
         put(this, p)
-        ants.push(this)
+        thingLists["ant"].push(this)
 
     }
     move(dst) {
@@ -523,8 +526,8 @@ for (let x=0;x<5;x++){
     //queen = new Ant([0, 0])
     new Ant([x, 0])
 }
-queen = ants[0]
-queen.queen = false // TODO:make this matter and change it to true
+queen = thingLists["ant"][0]
+queen.queen = false // TODO: don't make the queen an instance of Ant
 
 function sel(p) {
     if (!targets[["worker", p]] && isDirt(p) && !draggers[["dirt", p]]) {
@@ -668,7 +671,7 @@ function tick() {
             newWater.push(p)
         }
     }
-    for (let p of water) {
+    for (let p of thingLists["water"]) {
         let r = rand() // This means that moving dirt to dirt isn't slower than air to dirt
         // but also that water never moves sideways through dirt, which we might want to change
         if (isDirt(p) && r > MudProb) {
@@ -685,13 +688,13 @@ function tick() {
         }
         newWater.push(p)
     }
-    water = newWater
+    thingLists["water"] = newWater
 
     // Search for tasks available
     // tracking ants that have been encountered during the search might be able to speed things up
     // (particularly to avoid searching a large empty region multiple times)
 
-    for (let ant of ants) {
+    for (let ant of thingLists["ant"]) {
             debug=true
             if(debug){
                 var s = ant.plan+""
