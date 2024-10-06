@@ -42,3 +42,33 @@ Optional:
 
 
 Ants should to know when they are doing something that wasn't specifically ordered, e.g. dragging dirt to air that hadn't been ordered to be filled
+
+
+
+Mon  7 Oct 00:06:30 BST 2024
+
+
+instruction types
+  grub nursery
+   grubs not in a nursery search for routes to an unoccupied, untargeted, unordered nursery. If they find one, they create worker orders on themselves and affiliated grub placement orders on the nursery.
+  queens work similarly, but there can only be at most 1 "queen nursery".
+
+  icon for combined dig and place dirt?
+
+  order for "place actual dirt, not jsut tunnel"
+
+  Maybe add buttons for "clear all tasks" and "send ants to safety"
+
+
+convince ants not to kill themselves
+
+
+difficulty increase over time
+  we want players to lose eventually and ideally in ~5 minutes
+  patterns of water varing across space
+
+Tutorial
+
+
+efficient searching (when there are lots of ants, don't have them all repeatedly decide they can't find something)
+  preprocess orderes to see if (a) some of them have unoccupied ants nearby, and (b) if some of them are unreachable
