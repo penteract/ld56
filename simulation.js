@@ -67,6 +67,13 @@ class Ant {
         this.p = dst
     }
 
+    kill() {
+        console.info(this.idx, "ant died")
+        this.popTask(true)
+        this.alive = false
+        take(this, this.p)
+    }
+
     findTarget(type, start, lookForAir = false) {
         // console.log(this, type, start)
         let ordrs = orders[type]
@@ -571,6 +578,11 @@ class Ant {
             }
         }
 
+        if (!canBreathe(this.p)) {
+            this.kill()
+            return
+        }
+
         if (isAir(this.p) && !canStay(this.p)) {
             let below = add(this.p, [0, -1])
             assert(!isSolid(below))
@@ -913,6 +925,11 @@ class Queen {
     // if we want to move Queen or Grub for any reason outside fo pushing (e.g. gravity), we should be careful about orders/targets/draggers
 
     tick() {
+        if (!canBreathe(this.p)) {
+            this.kill()
+            return
+        }
+
         for (let n of neighbs(this.p)) {
             if (!isSolid(n) && !hasAnt(n) && map[n]?.includes("tunnel") && !map[n]?.includes("water") && rand() < 0.01) {
                 new Grub(n)
@@ -949,6 +966,11 @@ class Grub {
     }
 
     tick() {
+        if (map[this.p]?.includes("water")) {
+            this.kill()
+            return
+        }
+
         this.ticksToGrow -= 1
         if (this.ticksToGrow <= 0) {
             this.kill()
