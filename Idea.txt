@@ -73,3 +73,19 @@ According to https://www.mentalfloss.com/article/66523/how-do-anthills-survive-r
  - With some clever tunneling, ants can trap air in various chambers throughout the nest, and entrances to chambers come from below, preventing water from coming in.
 
 I would like to find a better source
+
+
+
+
+Sun  6 Oct 07:50:02 BST 2024
+
+  I think the game gets more interesting if we have a queen which spawns grubs which grow into ants.
+  Neither of those should be instances of Ant, but they should both be pushable.
+  Grubs die if wet, queen dies like ants (surrounded by water/dirt).
+  This incentivizes putting the queen underground (to keep her and the grubs in the driest place and having workers move the grubs away from her so she can spawn more.
+
+  I think we have time to get that basically correct, but it involves looking through every occurence of the string "worker" and the string "dirt" (and changing quite a few occurences of "dirt" into loops.
+
+  It should be possible to designate the queen's home and to designate tiles as part of a grub nursery (so grubs automatically get moved there by free workers).
+
+  If it's raining where you are, consider recording it for background music :)
