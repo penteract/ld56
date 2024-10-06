@@ -866,9 +866,9 @@ for (let x = 0; x < 5; x++) {
 
     take("dirt", [2 * x, -3])
     put("food", [2 * x, -3])
-
-    put("queen", [-1, 0])
 }
+put("queen", [-1, 0])
+
 queen = thingLists["ant"][0]
 queen.queen = false // TODO: don't make the queen an instance of Ant
 
