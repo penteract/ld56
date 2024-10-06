@@ -8,10 +8,10 @@ colMap = {
     "tunnel": "sandyBrown",
     "ant": "darkred",
     "worker": "darkred",
-    "queen": "#4b006e", //"#7851a9"
+    "queen": "hotpink", //"#7851a9"
     "grub": "seashell",
-    "food": "red",
-    "water": "#00F8",
+    "food": "forestgreen",
+    "water": "#00D7",
 }
 
 function draw() {
