@@ -66,7 +66,7 @@ window.addEventListener("keydown", (event) => {
 OrderText = {
     "dirt": "Build dirt",
     "dig": "Dig",
-    "grub": "Designate grub nursery",
+    "grub": "Designate Grub nursery",
     "queen": "Set Queen's home",
     "flexible": "Dig and build dirt"
     /*"food":true,*/
@@ -85,11 +85,11 @@ updateHud()
 function gameOver(reason) {
     clearInterval(tickInterval)
     redraw()
-    alert(`${reason}, game over!\nRefresh the page to retry.\n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
+    alert(`${reason}, game over!\nYou survived ${tickCount - 1} steps.\nRefresh the page to retry.\n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
 }
 
 function win() {
-    alert(`You won! You survived ${tickCount} steps. \NClick ok to continue playing, or refresh the page to start over. \n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
+    alert(`You won! You survived ${tickCount} steps.\nClick ok to continue playing, or refresh the page to start over. \n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
 }
 
 wasPaused = false
