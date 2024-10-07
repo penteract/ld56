@@ -16,7 +16,7 @@ function sel(p, button) {
         clearOrder(p)
         clearNursery(p)
     }
-    else if (button == 0) {
+    else if (button == 0 && inBounds(p)) {
         if (orderMode == "dig") {
             if (isSolid(p) && (getSolidTypeStr(p) === "dirt" || getSolidTypeStr(p) === "food")) { setOrder(p, "worker") }
         }
@@ -86,6 +86,10 @@ function gameOver(reason) {
     clearInterval(tickInterval)
     redraw()
     alert(`${reason}, game over!\nRefresh the page to retry.\n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
+}
+
+function win() {
+    alert(`You won! You survived ${tickCount} steps. \NClick ok to continue playing, or refresh the page to start over. \n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
 }
 
 wasPaused = false

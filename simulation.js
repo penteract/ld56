@@ -863,12 +863,12 @@ function put(thing, dst) {
     }
     if (map[dst]) map[dst].push(thing)
     else map[dst] = [thing]
+    if (typeof thing !== "string") { thing.p = dst }
     return thing
 }
 
 function move(thing, src, dst) {
     take(thing, src)
-    if (typeof thing !== "string") { thing.p = dst }
     return put(thing, dst)
 }
 
@@ -926,6 +926,9 @@ function tick() {
                 delayedOrders[t][p] -= 1
             }
         }
+    }
+    if (tickCount === 4500) { // 15 minutes on the default speed of 200 ms/t
+        win()
     }
     console.log(- t + (t = performance.now()), "delays")
     k = Math.log(tickCount) - 6
@@ -1157,6 +1160,7 @@ class Grub {
     }
 
     tick() {
+        assert(map[this.p].includes(this))
         if (this.plan && grubTargeting[this.plan[0]] !== this) { this.plan = undefined }
         if (map[this.p]?.includes("water")) {
             this.kill()
