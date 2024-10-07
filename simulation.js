@@ -709,7 +709,7 @@ function setOrder(p, type) {
         }
     }
     else {//TODO: should this remove delayed orders?
-        if (emptyForOrder(p) && (type == "grub" || !(nmap[p])) && !(queenHome + "" == p + "")) {
+        if (emptyForOrder(p) && (type == "grub" || !(nmap[p])) && (type == "queen" || queenHome + "" !== p + "")) {
             orders[type][p] = true
             return true
         }
@@ -996,10 +996,22 @@ function tickThings(thing) {
     thingLists[thing] = thingLists[thing].filter(x => x.alive)
 }
 
-tickInterval = null
+let tickInterval = null
+tickrate = 200
+let paused = false
 function setTickrate(rate) {
+    tickrate = rate
     clearInterval(tickInterval)
-    tickInterval = setInterval(tick, rate)
+    if (!paused) tickInterval = setInterval(tick, rate)
+}
+function pause() {
+    clearInterval(tickInterval)
+    paused = true
+}
+function resume() {
+    clearInterval(tickInterval)
+    tickInterval = setInterval(tick, tickrate)
+    paused = false
 }
 
 setTickrate(200)
@@ -1103,6 +1115,9 @@ class Queen {
         if (thingLists["grub"].length === 0 && thingLists["ant"].length === 0 && this.hunger <= 0) {
             this.kill("starved")
         }
+        if (queenHome + "" !== this.p + "" && !draggers[["queen", this.p]] && canWalk(queenHome)) {
+            setOrder(queenHome, "queen") && setOrder(this.p, "worker")
+        }
     }
 
     kill(reason) {
@@ -1151,6 +1166,7 @@ class Grub {
         if (this.ticksToGrow <= 0) {
             this.kill()
             new Ant(this.p)
+            return
         }
         if (nurserySpaces > 0 && !nmap[this.p] && !this.plan && !draggers[["grub", this.p]]) {
             function visit(p) {
