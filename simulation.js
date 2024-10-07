@@ -833,7 +833,7 @@ function willBeSolid(p) {
 function willWalk(p, type) {
     return ((!isSolid(p) && inBounds(p) &&
         (map[p]?.includes("tunnel") || willBeSolid([p[0], p[1] - 1]) || willBeSolid([p[0] - 1, p[1] - 1]) || willBeSolid([p[0] + 1, p[1] - 1]))
-        || (targets[["worker", p]] && (type == "worker" || getSolidTypeObj(p) === type)) || solidTypes.find(t => draggers[[t, p]]) || orders["worker"][p])
+        || (targets[["worker", p]] || orders["worker"][p] && (type == "worker" || getSolidTypeObj(p) === type)) || solidTypes.find(t => draggers[[t, p]]))
     )
 }
 
