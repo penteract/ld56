@@ -111,6 +111,9 @@ function incScore(amt = 1) {
     localStorage["highScore"] = Math.max(score, localStorage["highScore"])
 }
 
+workerOrdersAttempted = 0
+workerOrderSucceeded = false
+
 //const ants = []
 class Ant {
     constructor(p) {
@@ -157,10 +160,13 @@ class Ant {
                     return
                 }
             }
-            else if (type !== "worker") {
-                console.info("search failed (no orders)")
-                delayedOrders["worker"][start] = 20
+            else {
+                if (type !== "worker") {
+                    console.info("search failed (no orders)")
+                    delayedOrders["worker"][start] = 20
+                }
                 return
+
             }
         }
 
@@ -184,10 +190,11 @@ class Ant {
         }
         let found = search([start], hCost, neighbs, visit)
         //console.log(Object.keys(seen).length, found)
+        if (type == "worker") { workerOrdersAttempted += 1 }
         if (found) {
             let plan = found
             console.log(plan)
-            if (type === "worker") { plan.pop() }
+            if (type === "worker") { plan.pop(); workerOrderSucceeded = true }
             this.giveTask([type, plan])
         }
         else if (type == "dirt" && !lookForAir) {
@@ -959,7 +966,17 @@ function tick() {
     // tracking ants that have been encountered during the search might be able to speed things up
     // (particularly to avoid searching a large empty region multiple times)
 
+    workerOrdersAttempted = 0
+    workerOrderSucceeded = false
     tickThings("ant")
+    if (workerOrdersAttempted >= 5 && !workerOrderSucceeded) {
+        console.warn("too many unreachable worker orders - delaying")
+        for (let p in orders["worker"]) {
+            delete orders["worker"][p]
+            delayedOrders["worker"][p] = workerOrdersAttempted * 2
+        }
+    }
+
     console.log(- t + (t = performance.now()), "ants")
     nurserySpaces = Object.keys(nmap).length - Object.keys(grubTargeting).length
     tickThings("grub")
