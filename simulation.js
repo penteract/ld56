@@ -165,9 +165,12 @@ class Ant {
                     console.info("search failed (no orders)")
                     delayedOrders["worker"][start] = 20
                 }
+                else {
+                    console.info("worker search failed (no orders)")
+                }
                 return
-
             }
+
         }
 
         function validOrder(q) {

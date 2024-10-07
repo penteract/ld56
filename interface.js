@@ -66,7 +66,7 @@ window.addEventListener("keydown", (event) => {
 OrderText = {
     "dirt": "Build dirt",
     "dig": "Dig",
-    "grub": "Designate Grub nursery",
+    "grub": "Designate grub nursery",
     "queen": "Set Queen's home",
     "flexible": "Dig and build dirt"
     /*"food":true,*/
