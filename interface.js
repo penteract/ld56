@@ -7,19 +7,36 @@ orderType = "dirt"
 // z, x, c switch between digging,building,both
 
 function sel(p, button) {
-    if (shiftHeld && isSolid(p)) {
+    orderMode = document.querySelector('input[name="action"]:checked').value
+    /*if (shiftHeld && orderMode=="flexible") { can't directly build/place anything except dirt any more
         orderType = getSolidTypeStr(p)
-    }
-    if (button == 0) {
-        (orderMode.toLowerCase().includes("build") && setOrder(p, orderType)) || (orderMode.toLowerCase().includes("dig") && isSolid(p) && getSolidTypeStr(p) === orderType && setOrder(p, "worker"))
-    }
-    else if (button == 2) {
+    }*/
+    if((button == 2) || (button == 0 && orderMode=="cancel")){
         clearOrder(p)
+        clearNursery(p)
+    }
+    else if (button == 0) {
+        if(orderMode=="dig"){
+            if(isSolid(p) && getSolidTypeStr(p)=="dirt") {setOrder(p, "worker")}
+        }
+        else if(orderMode=="dirt"){
+            setOrder(p, "dirt")
+        }
+        else if(orderMode=="grub"){
+            designateNursery(p)
+        }
+        else if(orderMode=="queen"){
+            setQueenHome(p)
+        }
+        if(orderMode=="flexible"){
+            setOrder(p, orderType) || (isSolid(p) && getSolidTypeStr(p) === "dirt" && setOrder(p, "worker"))
+        }
     }
     redraw()
 }
 
 shiftHeld = false
+/*
 window.addEventListener("keydown", (event) => {
     switch (event.key) {
         case "Shift":
@@ -36,7 +53,7 @@ window.addEventListener("keydown", (event) => {
             break
     }
     updateHud()
-})
+})*/
 
 window.addEventListener("keyup", (event) => {
     if (event.key == "Shift") {
@@ -45,9 +62,20 @@ window.addEventListener("keyup", (event) => {
     }
 })
 
-function updateHud() {
-    document.getElementById("order-mode").textContent = orderMode + " " + orderType
+OrderText = {
+    "dirt":"build dirt",
+    "dig":"Dig",
+    "grub":"Designate grub Nursery",
+    "queen":"Set Queen's home"
+    /*"food":true,*/
 }
+
+function updateHud() {
+    let orderMode = document.querySelector('input[name="action"]:checked').value
+    document.getElementById("order-mode").textContent = OrderText[orderMode]
+    // orderMode + " " + orderType
+}
+updateHud()
 
 function gameOver(reason) {
     clearInterval(tickInterval)

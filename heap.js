@@ -41,6 +41,14 @@ function heapfix(h,l){
   }
 }
 
+function linkedListToArray(ll) {
+    let res = []
+    while (ll) {
+        res.push(ll[0])
+        ll = ll[1]
+    }
+    return res
+}
 
 function search(starts, hCost, neighbs, visit, maxDist){
     if ( maxDist===undefined) maxDist = Infinity
@@ -76,5 +84,5 @@ function search(starts, hCost, neighbs, visit, maxDist){
             }
         }
     }
-    return found
+    return found?linkedListToArray(found):found
 }

@@ -26,7 +26,33 @@ thingLists["water"] = [] //[[1,-2]] // immutable?
 thingLists["tunnel"] = [[0, -1]]
 thingLists["ant"] = []
 thingLists["grub"] = []
+thingLists["nursery"] = []
+queenHome = [-1, 0]
 let dirts = []
+
+let nmap = {}
+let grubTargeting = {} // Map from nursery spaces to grubs
+function designateNursery(p) {
+    if (emptyForOrder(p) && queenHome + "" != p + "" && !nmap[p]) {
+        thingLists["nursery"].push(p)
+        nmap[p] = true
+        return true
+    }
+    else { return false }
+}
+function clearNursery(p) {
+    if (nmap[p]) {
+        delete nmap[p]
+        thingLists["nursery"] = thingLists["nursery"].filter(x => x + "" != p + "")
+        clearOrder(p)
+    }
+}
+function setQueenHome(p) {
+    if (emptyForOrder(p) && !nmap[p]) {
+        queenHome = p
+    }
+}
+
 
 solidTypes = ["dirt", "food", "grub", "queen"] // if we add stone, we may want to separate solid types from pushable types
 
@@ -153,7 +179,7 @@ class Ant {
         let found = search([start], hCost, neighbs, visit)
         //console.log(Object.keys(seen).length, found)
         if (found) {
-            let plan = linkedListToArray(found)
+            let plan = found
             console.log(plan)
             if (type === "worker") { plan.pop() }
             this.giveTask([type, plan])
@@ -166,8 +192,11 @@ class Ant {
             delayedOrders["worker"][start] = 5
         }
     }
+    cancelTask() {
+        return this.popTask(undefined, true)
+    }
 
-    popTask(orderDragged) {
+    popTask(orderDragged, cancel) {
         //return type [type,plan], ["finished",locaton], "finished"
         if (!this.plan) return null
         let plan = this.plan
@@ -195,7 +224,7 @@ class Ant {
             if (orders["worker"][dragPos]) { console.warn("didn't expect an order to already be there") }
             orders["worker"][dragPos] = true
         }
-        orders[type][target] = true
+        if (!cancel) { orders[type][target] = true }
         return [type, plan]
     }
 
@@ -654,6 +683,9 @@ function concatPaths(p1, p2) {
 }
 
 
+function emptyForOrder(p) {
+    return (!isSolid(p) && !(solidTypes.find(t => targets[[t, p]] || orders[t][p])))
+}
 
 function setOrder(p, type) {
     // sets an order of the specified type if able, upholding invariants. returns true if successful
@@ -663,8 +695,8 @@ function setOrder(p, type) {
             return true
         }
     }
-    else {
-        if (!isSolid(p) && !(solidTypes.find(t => targets[[t, p]] || orders[t][p]))) {
+    else {//TODO: should this remove delayed orders?
+        if (emptyForOrder(p) && (type == "grub" || !(nmap[p])) && !(queenHome + "" == p + "")) {
             orders[type][p] = true
             return true
         }
@@ -672,14 +704,34 @@ function setOrder(p, type) {
     return false
 }
 
-function clearOrder(p) {
+function clearOrderType(p, type) {
+    // assumes dontcancel
+    let res = false
+    res ||= orders[type][p]
+    delete orders[type][p]
+    delete delayedOrders[type][p]// maybe this helps
+
+    let w1 = targets[[type, p]]
+    if (w1) { w1.popTask() }
+    return res
+}
+
+function clearOrder(p, dontCancel) {
     // consider also canceling targeted tasks and/or delayed orders
-    res = false
+    let res = false
+    let w1 = undefined
+    let w2 = undefined
     for (let t in orders) {
         res ||= orders[t][p]
         delete orders[t][p]
         delete delayedOrders[t][p]// maybe this helps
+
+        w1 ??= targets[[t, p]]
+        w2 ??= draggers[[t, p]]
     }
+    w1 ??= targets[["worker", p]]
+    if (w1) { dontCancel ? w1.popTask() : w1.cancelTask() }
+    if (w2) { w2.cancelTask() }
     return res
 }
 
@@ -899,6 +951,7 @@ function tick() {
 
     tickThings("ant")
     console.log(- t + (t = performance.now()), "ants")
+    nurserySpaces = Object.keys(nmap).length - Object.keys(grubTargeting).length
     tickThings("grub")
     console.log(- t + (t = performance.now()), "grubs")
     queen.tick()
@@ -933,14 +986,6 @@ function assert(c, ...args) {
     }
 }
 
-function linkedListToArray(ll) {
-    let res = []
-    while (ll) {
-        res.push(ll[0])
-        ll = ll[1]
-    }
-    return res
-}
 
 const Margin = 20 // Changing Margin has an effect on water throughput
 
@@ -1043,6 +1088,7 @@ class Grub {
     constructor(p) {
         put(this, p)
         this.p = p
+        clearOrder(this.p, true)
         thingLists["grub"].push(this)
         this.ticksToGrow = Math.floor(75 + rand() * 50)
         this.alive = true
@@ -1057,20 +1103,42 @@ class Grub {
         if ((ant = draggers[["grub", this.p]]) || (ant = targets[["worker", this.p]])) {
             ant.popTask()
         }
-        clearOrder(this.p)
+        clearOrderType(this.p, "worker")
         take(this, this.p)
+        if (this.plan && grubTargeting[this.plan[0]] === this) {
+            nurserySpaces += 1
+            delete grubTargeting[this.plan[0]]
+            clearOrderType(this.plan[0], "grub")
+        }
     }
 
     tick() {
+        if (this.plan && grubTargeting[this.plan[0]] !== this) { this.plan = undefined }
         if (map[this.p]?.includes("water")) {
             this.kill()
             return
         }
-
         this.ticksToGrow -= 1
         if (this.ticksToGrow <= 0) {
             this.kill()
             new Ant(this.p)
+        }
+        if (nurserySpaces > 0 && !nmap[this.p] && !this.plan && !draggers[["grub", this.p]]) {
+            function visit(p) {
+                let walkable = willWalk(p)
+                return [walkable, walkable && nmap[p] && !grubTargeting[p]]
+            }
+            let found = search([this.p], hCost, neighbs, visit)
+            if (found) {
+                if (setOrder(this.p, "worker")) {
+                    if (setOrder(found[0], "grub")) {
+                        // TODO: if a grub gets dropped temporarily, the order doesn't get unset
+                        grubTargeting[found[0]] = this
+                        this.plan = found
+                        nurserySpaces -= 1
+                    }
+                }
+            }
         }
     }
 

@@ -12,6 +12,7 @@ colMap = {
     "grub": "seashell",
     "food": "forestgreen",
     "water": "#00D7",
+    "nursery":"#FFF8"
 }
 
 function draw() {
@@ -43,7 +44,11 @@ function draw() {
             ctx.fillStyle = colMap["water"]
             ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
         }
-
+    }
+    for (let p in nmap){
+        p = p.split(",")
+        ctx.fillStyle = colMap["nursery"]
+        ctx.fillRect(SQSZ * p[0], SQSZ * p[1], SQSZ, SQSZ)
     }
     ctx.setLineDash([(SQSZ-1)*2/7, (SQSZ-1)*2/9])
     for (let type in orders) {
