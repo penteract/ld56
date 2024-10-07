@@ -72,3 +72,15 @@ Tutorial
 
 efficient searching (when there are lots of ants, don't have them all repeatedly decide they can't find something)
   preprocess orderes to see if (a) some of them have unoccupied ants nearby, and (b) if some of them are unreachable
+
+Mon  7 Oct 16:39:30 BST 2024
+ more hud elements:
+ - button to show tutorial again
+ - speed slider 
+ - play/pause button?
+ - clear all orders
+ 
+ "get to safety" order type is probably too complex to implement at this point. 
+ however you can get ants to safety by putting build orders somewhere safe and then enoguh safe dig orders to fill them
+
+ ants still don't avoid drowning themselves yet
