@@ -154,8 +154,11 @@ class Ant {
             delayedOrders["worker"][start] = 5
         }
     }
+    cancelTask(){
+        return this.popTask(undefined,true)
+    }
 
-    popTask(orderDragged) {
+    popTask(orderDragged,cancel) {
         //return type [type,plan], ["finished",locaton], "finished"
         if (!this.plan) return null
         let plan = this.plan
@@ -183,7 +186,7 @@ class Ant {
             if (orders["worker"][dragPos]) { console.warn("didn't expect an order to already be there") }
             orders["worker"][dragPos] = true
         }
-        orders[type][target] = true
+        if(!cancel) {orders[type][target] = true}
         return [type, plan]
     }
 
@@ -651,7 +654,7 @@ function setOrder(p, type) {
             return true
         }
     }
-    else {
+    else {//TODO: should this remove delayed orders?
         if (!isSolid(p) && !(solidTypes.find(t => targets[[t, p]] || orders[t][p]))) {
             orders[type][p] = true
             return true
@@ -663,11 +666,19 @@ function setOrder(p, type) {
 function clearOrder(p) {
     // consider also canceling targeted tasks and/or delayed orders
     res = false
+    w1 = undefined
+    w2 = undefined
     for (let t in orders) {
         res ||= orders[t][p]
         delete orders[t][p]
         delete delayedOrders[t][p]// maybe this helps
+
+        w1??=targets[[t,p]]
+        w2??=draggers[[t,p]]
     }
+    w1??=targets[["worker",p]]
+    if(w1){w1.cancelTask()}
+    if(w2){w2.cancelTask()}
     return res
 }
 
