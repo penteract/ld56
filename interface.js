@@ -63,7 +63,7 @@ window.addEventListener("keyup", (event) => {
 })
 
 OrderText = {
-    "dirt": "build dirt",
+    "dirt": "Build dirt",
     "dig": "Dig",
     "grub": "Designate grub Nursery",
     "queen": "Set Queen's home",
