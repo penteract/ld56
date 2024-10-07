@@ -1,12 +1,13 @@
-orderMode = "Digging and building"
-orderType = "dirt"
+// orderMode = "Digging and building"
+// orderType = "dirt"
 
 // click to order build or dig
-// hold shift to set order type to non-dirt, release to set it back to dirt
+// // hold shift to set order type to non-dirt, release to set it back to dirt
 // right click to cancel orders
-// z, x, c switch between digging,building,both
+// // z, x, c switch between digging,building,both // ah yes commented out comments to indicate no longer being relevant
 
 function sel(p, button) {
+    if ((document.getElementById("tutorial")).style.display !== "none") return
     orderMode = document.querySelector('input[name="action"]:checked').value
     /*if (shiftHeld && orderMode=="flexible") { can't directly build/place anything except dirt any more
         orderType = getSolidTypeStr(p)
@@ -29,7 +30,7 @@ function sel(p, button) {
             setQueenHome(p)
         }
         if (orderMode == "flexible") {
-            setOrder(p, orderType) || (isSolid(p) && (getSolidTypeStr(p) === "dirt" || getSolidTypeStr(p) === "food") && setOrder(p, "worker"))
+            setOrder(p, "dirt") || (isSolid(p) && (getSolidTypeStr(p) === "dirt" || getSolidTypeStr(p) === "food") && setOrder(p, "worker"))
         }
     }
     redraw()
@@ -55,17 +56,17 @@ window.addEventListener("keydown", (event) => {
     updateHud()
 })*/
 
-window.addEventListener("keyup", (event) => {
-    if (event.key == "Shift") {
-        shiftHeld = false
-        orderType = "dirt"
-    }
-})
+// window.addEventListener("keyup", (event) => {
+//     if (event.key == "Shift") {
+//         shiftHeld = false
+//         orderType = "dirt"
+//     }
+// })
 
 OrderText = {
     "dirt": "Build dirt",
     "dig": "Dig",
-    "grub": "Designate grub Nursery",
+    "grub": "Designate Grub nursery",
     "queen": "Set Queen's home",
     "flexible": "Dig and build dirt"
     /*"food":true,*/
@@ -86,3 +87,19 @@ function gameOver(reason) {
     redraw()
     alert(`${reason}, game over!\nRefresh the page to retry.\n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
 }
+
+wasPaused = false
+function showTutorial() {
+    document.getElementById("tutorial").style.display = "block"
+    wasPaused = paused
+    pause()
+    //localStorage["seenTutorial"] = true
+}
+
+function hideTutorial() {
+    document.getElementById("tutorial").style.display = "none"
+    if (!wasPaused) resume()
+}
+
+// if (!localStorage["seenTutorial"]) 
+showTutorial()
