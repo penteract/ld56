@@ -50,6 +50,7 @@ function clearNursery(p) {
 }
 function setQueenHome(p) {
     if (emptyForOrder(p) && !nmap[p]) {
+        clearOrder(queenHome)
         queenHome = p
     }
 }
