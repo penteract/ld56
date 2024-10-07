@@ -140,7 +140,7 @@ class Ant {
                     if (validOrder(q)) {
                         found = [q, path]
                     }
-                    heappush(heap, d + hCost(q), [q, path])
+                    heappush(heap, d + hCost(q,d), [q, path])
                 }
             }
         }
@@ -671,6 +671,7 @@ function clearOrder(p) {
     for (let t in orders) {
         res ||= orders[t][p]
         delete orders[t][p]
+        delete delayedOrders[t][p]// maybe this helps
     }
     return res
 }
