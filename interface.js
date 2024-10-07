@@ -76,11 +76,13 @@ function updateHud() {
     document.getElementById("order-mode").textContent = OrderText[orderMode]
     // orderMode + " " + orderType
     document.getElementById("queen-sat").textContent = queen.hunger
+    document.getElementById("population").textContent = thingLists["ant"].length + queen.alive
+    document.getElementById("score").textContent = score
 }
 updateHud()
 
 function gameOver(reason) {
     clearInterval(tickInterval)
     redraw()
-    alert(`${reason}, game over!\nRefresh the page to retry.`)
+    alert(`${reason}, game over!\nRefresh the page to retry.\n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
 }

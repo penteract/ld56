@@ -28,6 +28,7 @@ thingLists["ant"] = []
 thingLists["grub"] = []
 thingLists["nursery"] = []
 queenHome = [-1, 0]
+score = 0
 let dirts = []
 
 let nmap = {}
@@ -104,6 +105,11 @@ function hCost(q, d) {
     return cost
 }
 
+function incScore(amt = 1) {
+    score += amt
+    localStorage["highScore"] ??= 0
+    localStorage["highScore"] = Math.max(score, localStorage["highScore"])
+}
 
 //const ants = []
 class Ant {
@@ -173,7 +179,7 @@ class Ant {
         else { assert([...neighbs(start)].find(x => x == this.p + "")) }
         function visit(p) {
             return [
-                willWalk(p, type) && inBounds(p)
+                willWalk(p, type)
                 , validOrder(p)]
         }
         let found = search([start], hCost, neighbs, visit)
@@ -782,7 +788,7 @@ function hasAnt(p) {
 }
 
 function canWalk(p) {
-    return !isSolid(p) && !hasAnt(p) &&
+    return !isSolid(p) && !hasAnt(p) && inBounds(p) &&
         (map[p]?.includes("tunnel") || isSolid([p[0], p[1] - 1]) || isSolid([p[0] - 1, p[1] - 1]) || isSolid([p[0] + 1, p[1] - 1]))
 }
 
@@ -815,7 +821,7 @@ function willBeSolid(p) {
 }
 
 function willWalk(p, type) {
-    return ((!isSolid(p) &&
+    return ((!isSolid(p) && inBounds(p) &&
         (map[p]?.includes("tunnel") || willBeSolid([p[0], p[1] - 1]) || willBeSolid([p[0] - 1, p[1] - 1]) || willBeSolid([p[0] + 1, p[1] - 1]))
         || (targets[["worker", p]] && (type == "worker" || getSolidTypeObj(p) === type)) || solidTypes.find(t => draggers[[t, p]]) || orders["worker"][p])
     )
@@ -823,11 +829,14 @@ function willWalk(p, type) {
 
 
 
-function take(thing, src) {
+function take(thing, src, shouldScore = true) {
     let l = map[src]
     if (thing == "dirt" && isDirt(src)) {
         put("tunnel", src)
-        if (!l?.includes(thing)) return
+        if (!l?.includes(thing)) {
+            if (shouldScore) incScore() // this is new dirt
+            return
+        }
     }
     assert(l.includes(thing), l, thing, src)
     if (l.length === 1) delete map[src]
@@ -838,6 +847,7 @@ function put(thing, dst) {
     if (thing == "dirt") {
         if (isAir(dst)) {
             thing = "tunnel"
+            incScore()
             console.log("placed tunnel")
         }
         else if (map[dst]?.includes("tunnel")) {
@@ -1030,7 +1040,7 @@ function mapGen(x, y) {
     let closeness = abs(abs(x) - abs(y)) % 20
     let density = lerp(0.05, 0.01, closeness / 20)
     if (rand() < density && isDirt([x, y])) {
-        take("dirt", [x, y])
+        take("dirt", [x, y], false)
         put("food", [x, y])
     }
 }
@@ -1042,6 +1052,7 @@ class Queen {
         put(this, p)
         this.p = p
         this.hunger = 5
+        this.alive = true
     }
     toString() {
         return "queen"
@@ -1078,6 +1089,7 @@ class Queen {
     }
 
     kill(reason) {
+        this.alive = false
         if (!reason) { reason = "died" }
         take(this, this.p)
         gameOver(`Your Queen ${reason}`)
@@ -1145,7 +1157,7 @@ class Grub {
 }
 // Starting configuration 
 
-take("dirt", [0, -1])
+take("dirt", [0, -1], false)
 
 for (let x = 0; x < 3; x++) {
     //queen = new Ant([0, 0])
