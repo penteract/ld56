@@ -46,6 +46,40 @@ let draggers = {} // tracks if anyone is dragging a particular thing {[thing,pos
 let targets = {} // tracks if anyone is targeting a particular position {[task,postion]:Ant}
 
 
+
+function hCost(q,d) {
+    /* heuristic function for searches */
+    let wcount = 0
+    let dirtCount = 0
+    for (let dx = -1; dx <= 1; dx++)for (let dy = -1; dy <= 1; dy++) {
+        let p = add(q, [dx, dy])
+        let isw = map[p]?.includes("water")
+        wcount += isw
+        if (isDirt(p)) {
+            if (draggers[["dirt",p]]) {dirtCount+= Math.min(1,4/d)}
+            else if (targets[["worker",p]]) {dirtCount+= Math.min(1,40/d)}
+            else {dirtCount += 1}
+        }
+        else if(targets["dirt",p] && map[p]?.includes("tunnel")){
+            dirtCount += 0.5 - 1/d
+        }
+    }
+    let cost = 1
+    //cost+=(wcount**2)/Math.sqrt(d+1) // try not to walk through waterlogged places
+    let deathChance = (wcount/9)**(9-dirtCount)
+    let cap = 1/50
+    if (deathChance<cap) {deathChance=cap}
+    else if (deathChance>(1-cap)) {deathChance=1-cap}
+    // deathChance=deathChance + 1/(100*deathChance+10) - 1/(100*(1-deathChance)+10)
+    // we're adding costs together, and multiplying chances of survival, so logarithm is appropriate
+    cost += (-100)*Math.log(1-deathChance)
+    /*consider considering these
+    if (!canWalk(q)) return 5
+    if (hasAnt(q)) return 2*/
+    return cost
+}
+
+
 //const ants = []
 class Ant {
     constructor(p) {
@@ -90,36 +124,6 @@ class Ant {
             return ordrs[q] || (lookForAir && isAir(q) && !solidTypes.find(t => targets[[t, q]]))
         }
 
-        function hCost(q,d) {
-            let wcount = 0
-            let dirtCount = 0
-            for (let dx = -1; dx <= 1; dx++)for (let dy = -1; dy <= 1; dy++) {
-                let p = add(q, [dx, dy])
-                let isw = map[p]?.includes("water")
-                wcount += isw
-                if (isDirt(p)) {
-                    if (draggers[["dirt",p]]) {dirtCount+= Math.min(1,4/d)}
-                    else if (targets[["worker",p]]) {dirtCount+= Math.min(1,40/d)}
-                    else {dirtCount += 1}
-                }
-                else if(targets["dirt",p] && map[p]?.includes("tunnel")){
-                    dirtCount += 0.5 - 1/d
-                }
-            }
-            let cost = 1
-            //cost+=(wcount**2)/Math.sqrt(d+1) // try not to walk through waterlogged places
-            let deathChance = (wcount/9)**(9-dirtCount)
-            let cap = 1/50
-            if (deathChance<cap) {deathChance=cap}
-            else if (deathChance>(1-cap)) {deathChance=1-cap}
-            // deathChance=deathChance + 1/(100*deathChance+10) - 1/(100*(1-deathChance)+10)
-            // we're adding costs together, and multiplying chances of survival, so logarithm is appropriate
-            cost += (-100)*Math.log(1-deathChance)
-            /*consider considering these
-            if (!canWalk(q)) return 5
-            if (hasAnt(q)) return 2*/
-            return cost
-        }
 
         // This is a heap because that might help with efficiency if we try to reuse it
         // might give suboptimal paths, but it's better than flood filling the map for every ant.
