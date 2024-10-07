@@ -3,9 +3,10 @@
 <head>
     <title> Anthill </title>
     <style>
-        html{
-          overflow:hidden;
+        html {
+            overflow: hidden;
         }
+
         html,
         body,
         canvas {
@@ -51,12 +52,15 @@
         fieldset input:checked+label>svg {
             border: 10px solid blue;
         }
+
         #openTut>svg {
             border: 10px solid #0000;
         }
+
         #openTut {
-            margin-left: 100px ;
+            margin-left: 100px;
         }
+
         #openTut>svg:hover {
             border: 10px solid #2F2;
         }
@@ -72,8 +76,8 @@
             background: #8a83a7e7;
             padding: 20px;
             border: #2222 10px solid;
-            overflow-y:auto;
-            max-height:calc(100% - 60px);
+            overflow-y: auto;
+            max-height: calc(100% - 60px);
         }
 
         #tutorial>h1 {
@@ -86,6 +90,7 @@
             right: 5px;
             background-color: #FFF2;
         }
+
         #tut-hide {
             position: absolute;
             top: 5px;
@@ -101,9 +106,13 @@
             border: 10px solid #F22;
         }
 
-        .tut-ant,.tut-dirt,.tut-water,.tut-food{
+        .tut-ant,
+        .tut-dirt,
+        .tut-water,
+        .tut-food {
             color: white;
         }
+
         .tut-ant {
             background-color: darkred;
             /* could we set these in js to ensure the're consistent with colMap? */
@@ -118,7 +127,8 @@
         }
 
         .tut-food {
-            background-color: forestgreen; /*#006a00; /* forestgreen;  #008B00 */
+            background-color: forestgreen;
+            /*#006a00; /* forestgreen;  #008B00 */
         }
 
         .tut-air {
@@ -136,10 +146,11 @@
         .tut-water {
             background-color: #00D;
         }
-        #tutorial p>svg{
+
+        #tutorial p>svg {
             margin-bottom: -2px;
-            padding:0px;
-            border:0px;
+            padding: 0px;
+            border: 0px;
         }
     </style>
 </head>
@@ -147,14 +158,14 @@
 <body oncontextmenu="return false">
     <svg style="display:none">
         <defs>
-        <path id="spadeIcon"
-            d="M 13 4 L 14 3 L 16 5 C 15 7 13 7 11 7 L 5 13 L 7 15 C 5 17 4 17 0 17 C 0 13 0 12 2 10 L 4 12 L 10 6 C 10 4 10 2 12 1 L 14 3 L 13 4 L 12 3 C 11 3 10 5 11 6 C 12 7 14 6 14 5"
-            fill="#000">
-        </path>
-        <g id="flexibleIcon">
-            <use href="#spadeIcon"> </use>
-            <path d="M 1 22 L 22 22 L 22 1 Z" fill="sienna">
-        </g>
+            <path id="spadeIcon"
+                d="M 13 4 L 14 3 L 16 5 C 15 7 13 7 11 7 L 5 13 L 7 15 C 5 17 4 17 0 17 C 0 13 0 12 2 10 L 4 12 L 10 6 C 10 4 10 2 12 1 L 14 3 L 13 4 L 12 3 C 11 3 10 5 11 6 C 12 7 14 6 14 5"
+                fill="#000">
+            </path>
+            <g id="flexibleIcon">
+                <use href="#spadeIcon"> </use>
+                <path d="M 1 22 L 22 22 L 22 1 Z" fill="sienna">
+            </g>
         </defs>
 
     </svg>
@@ -229,6 +240,7 @@
         <div>Queen saturation: <span id="queen-sat"></span></div>
         <div>Population: <span id="population"></span></div>
         <div>Score: <span id="score"></span></div>
+        <div>Time: <span id="time"></span></div>
     </div>
 
     <div id="tutorial">
@@ -244,14 +256,27 @@
             </svg>
         </div>
         <!-- TODO: add icons for order types -->
-        <p> Your <span class="tut-ant">ants</span> will try to complete the closest order. Choose a type of order using the buttons at the top and then give the orders by clicking where you want them to happen. Hold the mouse button down while moving the mouse to select lots of locations quickly.</p>
-        <p> Order <span class="tut-dirt">dirt</span> to be dug (<svg width="1em" height="1em" viewBox="-1 -1 19 19" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <use href="#spadeIcon"></use></svg>) and your  <span class="tut-ant">worker ants</span> will move it to the closest empty space, turning the space into <span class="tut-tunnel">tunnel wall</span>. This does not block <span class="tut-water">water</span>, but lets ants move freely.</p>
-        <p> Ordering <span class="tut-air">air</span> to have <span class="tut-dirt">dirt</span> built (<svg width="1em" height="1em" viewBox="-1 -1 12 12" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <use href="#dirtIcon"></use></svg>) makes ants carry <span class="tut-dirt">Dirt</span> there, turning it into <span class="tut-tunnel">tunnel wall</span>. Ordering more to be built at the <span class="tut-tunnel">tunnel wall</span> will turn it into solid <span class="tut-dirt">dirt</span></p>
+        <p> Your <span class="tut-ant">ants</span> will try to complete the closest order. Choose a type of order using
+            the buttons at the top and then give the orders by clicking where you want them to happen. Hold the mouse
+            button down while moving the mouse to select lots of locations quickly.</p>
+        <p> Order <span class="tut-dirt">dirt</span> to be dug (<svg width="1em" height="1em" viewBox="-1 -1 19 19"
+                version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <use href="#spadeIcon"></use>
+            </svg>) and your <span class="tut-ant">worker ants</span> will move it to the closest empty space, turning
+            the space into <span class="tut-tunnel">tunnel wall</span>. This does not block <span
+                class="tut-water">water</span>, but lets ants move freely.</p>
+        <p> Ordering <span class="tut-air">air</span> to have <span class="tut-dirt">dirt</span> built (<svg width="1em"
+                height="1em" viewBox="-1 -1 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink">
+                <use href="#dirtIcon"></use>
+            </svg>) makes ants carry <span class="tut-dirt">Dirt</span> there, turning it into <span
+                class="tut-tunnel">tunnel wall</span>. Ordering more to be built at the <span class="tut-tunnel">tunnel
+                wall</span> will turn it into solid <span class="tut-dirt">dirt</span></p>
 
-        <p>Use the right mouse button or the Cancel mode (<svg width="1em" height="1em" viewBox="-6 -6 12 12" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <use href="#cancelIcon"></use></svg>) to cancel orders. (This is very useful if ants get stuck).</p>
+        <p>Use the right mouse button or the Cancel mode (<svg width="1em" height="1em" viewBox="-6 -6 12 12"
+                version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <use href="#cancelIcon"></use>
+            </svg>) to cancel orders. (This is very useful if ants get stuck).</p>
 
         <p>Use arrow keys, or drag the middle mouse button to pan around the map, and use the scroll wheel
             to zoom.</p>
@@ -259,18 +284,38 @@
         <p><span class="tut-dirt">Dirt</span> with no orders to build will be brought to the nearest <span
                 class="tut-air">air</span> space and become a <span class="tut-tunnel">wall</span> for <span
                 class="tut-ant">ants</span> to climb on and <span class="tut-dirt">solid dirt</span> to be built on.</p> -->
-        <p>Dig (<svg width="1em" height="1em" viewBox="-1 -1 19 19" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <use href="#spadeIcon"></use></svg>) up <span class="tut-food">food</span> and it gets brought to the <span class="tut-queen">Queen</span> who will produce <span class="tut-grub">grubs</span> if she has adjacent <span class="tut-tunnel">tunnel wall</span>. These will grow into new <span class="tut-ant">worker ants</span>.</p>
+        <p>Dig (<svg width="1em" height="1em" viewBox="-1 -1 19 19" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink">
+                <use href="#spadeIcon"></use>
+            </svg>) up <span class="tut-food">food</span> and it gets brought to the <span
+                class="tut-queen">Queen</span> who will produce <span class="tut-grub">grubs</span> if she has adjacent
+            <span class="tut-tunnel">tunnel wall</span>. These will grow into new <span class="tut-ant">worker
+                ants</span>.</p>
 
-        <p> <span class="tut-grub">Grubs</span> that get <span class="tut-water">wet</span> die and <span class="tut-ant">ants</span> (including the <span class="tut-queen">Queen</span>) who get surrounded by <span class="tut-water">water</span> drown. Be careful when digging tunnels in the rain! <p/>
-        <p>Dig tunnels and build structures that divert <span class="tut-water">water</span> to keep your colony safe. <span class="tut-water">Rainfall</span> will come and go, but gradually get heavier over time!</p>
+        <p> <span class="tut-grub">Grubs</span> that get <span class="tut-water">wet</span> die and <span
+                class="tut-ant">ants</span> (including the <span class="tut-queen">Queen</span>) who get surrounded by
+            <span class="tut-water">water</span> drown. Be careful when digging tunnels in the rain!
+            <p />
+        <p>Dig tunnels and build structures that divert <span class="tut-water">water</span> to keep your colony safe.
+            <span class="tut-water">Rainfall</span> will come and go, but gradually get heavier over time!</p>
 
-        <p> To move <span class="tut-grub">grubs</span>, designate <span class="tut-grub">grub nurseries</span> (<svg width="1em" height="1em" viewBox="-1 -1 12 12" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <use href="#grubIcon"></use></svg>) over <span class="tut-tunnel">tunnel wall</span>. <span class="tut-ant">Ants</span> will automatically bring <span class="tut-grub">grubs</span> to the nurseries.</p>
-        <p> You can tell <span class="tut-ant">ants</span> to move the <span class="tut-queen">Queen</span> by using <span class="tut-queen">Queen home</span> (<svg width="1em" height="1em" viewBox="-1 -1 12 12" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <use href="#queenIcon"></use></svg>).</p>
+        <p> To move <span class="tut-grub">grubs</span>, designate <span class="tut-grub">grub nurseries</span> (<svg
+                width="1em" height="1em" viewBox="-1 -1 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink">
+                <use href="#grubIcon"></use>
+            </svg>) over <span class="tut-tunnel">tunnel wall</span>. <span class="tut-ant">Ants</span> will
+            automatically bring <span class="tut-grub">grubs</span> to the nurseries.</p>
+        <p> You can tell <span class="tut-ant">ants</span> to move the <span class="tut-queen">Queen</span> by using
+            <span class="tut-queen">Queen home</span> (<svg width="1em" height="1em" viewBox="-1 -1 12 12" version="1.1"
+                xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <use href="#queenIcon"></use>
+            </svg>).</p>
         <p> The first order mode (<svg width="1em" height="1em" viewBox="-1 -1 24 24" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <use href="#flexibleIcon"></use></svg>) in the top left is probably the most useful - this digs if you select <span class="tut-dirt">dirt</span> or <span class="tut-food">food</span> and places <span class="tut-dirt">dirt</span> if you select spaces without anything solid.</p>
+                xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <use href="#flexibleIcon"></use>
+            </svg>) in the top left is probably the most useful - this digs if you select <span
+                class="tut-dirt">dirt</span> or <span class="tut-food">food</span> and places <span
+                class="tut-dirt">dirt</span> if you select spaces without anything solid.</p>
         <!-- TODO: add hints: (build walls and a roof) -->
     </div>
 
