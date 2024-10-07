@@ -7,7 +7,7 @@
 // // z, x, c switch between digging,building,both // ah yes commented out comments to indicate no longer being relevant
 
 function sel(p, button) {
-    if ((document.getElementById("tutorial")).style.display !== "none") return
+    //if ((document.getElementById("tutorial")).style.display !== "none") return
     orderMode = document.querySelector('input[name="action"]:checked').value
     /*if (shiftHeld && orderMode=="flexible") { can't directly build/place anything except dirt any more
         orderType = getSolidTypeStr(p)
@@ -95,15 +95,30 @@ function win() {
 wasPaused = false
 function showTutorial() {
     document.getElementById("tutorial").style.display = "block"
-    wasPaused = paused
-    pause()
+    //wasPaused = paused
+    // pause()
     //localStorage["seenTutorial"] = true
 }
 
 function hideTutorial() {
     document.getElementById("tutorial").style.display = "none"
-    if (!wasPaused) resume()
+    // if (!wasPaused) resume()
 }
+
+function toggleTutorial(){
+    if(document.getElementById("tutorial").style.display == "block"){
+        hideTutorial()
+    }
+    else{
+        showTutorial()
+    }
+}
+
 
 // if (!localStorage["seenTutorial"]) 
 showTutorial()
+
+
+let urlParams = new URLSearchParams(window.location.search);
+let gameMode = urlParams.get('gameMode');
+if(!["easy","hard","sandbox"].includes(gameMode)) {console.warn("unrecognized gamemode"); gameMode="easy" }

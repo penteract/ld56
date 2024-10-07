@@ -48,13 +48,22 @@
         fieldset input:checked+label>svg {
             border: 10px solid blue;
         }
+        #openTut>svg {
+            border: 10px solid #0000;
+        }
+        #openTut {
+            margin-left: 100px ;
+        }
+        #openTut>svg:hover {
+            border: 10px solid #2F2;
+        }
 
         #tutorial {
             display: none;
             position: absolute;
             width: 30%;
             top: 20%;
-            left: 35%;
+            right: 0px;
             /** todo: find a colour that all the coloured text is readable against */
             background: #8a83a7e7;
             padding: 20px;
@@ -69,6 +78,12 @@
             position: absolute;
             top: 5px;
             right: 5px;
+            background-color: #FFF2;
+        }
+        #tut-hide {
+            position: absolute;
+            top: 5px;
+            left: 5px;
             background-color: #FFF2;
         }
 
@@ -186,6 +201,14 @@
                         </g>
                     </svg></label>
             </div>
+            <div id="openTut" onclick="toggleTutorial()" title="Show/hide tutorial">
+                <svg width="80px" height="80px" viewBox="-6 -6 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink">
+                    <rect x="-5" y="-5" width="10" height="2" fill="black"> </rect>
+                    <rect x="-5" y="-1" width="10" height="2" fill="black"> </rect>
+                    <rect x="-5" y="3" width="10" height="2" fill="black"> </rect>
+                </svg>
+            </div>
         </fieldset>
 
         <div>Order mode: <span id="order-mode"></span></div>
@@ -206,9 +229,13 @@
                 </g>
             </svg>
         </div>
-        <p>Click and drag to order your <span class="tut-ant">worker ants</span> to (by default) dig and build <span
-                class="tut-dirt">dirt</span>.</p>
-        <p>Use the right mouse button or the Cancel mode to cancel orders.</p>
+        <p> Give orders and your ants will try to complete the closest. Choose the type of order using the buttons at the top. Give the orders by clicking where you want them to happen. </p>
+        <p> Dig <span class="tut-dirt">dirt</span> to order your  <span class="tut-ant">worker ants</span> to move it to the closest empty space, turning the space into tunnel <span class="tut-tunnel">tunnel wall</span> This does not block <span class="tut-water">water</span>, but lets ants move freely</p>
+        <p> Ordering <span class="tut-dirt">Dirt</span> to be built makes ants carry <span class="tut-dirt">Dirt</span> to a position. This will turn <span
+                class="tut-air">air</span> into <span class="tut-tunnel">tunnel wall</span>, and <span class="tut-tunnel">tunnel wall</span> into solid <span class="tut-dirt">dirt</span></p>
+
+        <p>Use the right mouse button or the Cancel mode to cancel orders. (this is very useful if ants get stuck)</p>
+
         <p>Use arrow keys, or drag the middle mouse button to pan around the map, and use the scroll wheel
             to zoom.</p>
         <p><span class="tut-dirt">Dirt</span> with no orders to build will be brought to the nearest <span
