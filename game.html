@@ -62,7 +62,8 @@
             display: none;
             position: absolute;
             width: 30%;
-            top: 20%;
+            min-width: 400px;
+            top: 0px;
             right: 0px;
             /** todo: find a colour that all the coloured text is readable against */
             background: #8a83a7e7;
@@ -95,37 +96,40 @@
             border: 10px solid #F22;
         }
 
+        .tut-ant,.tut-dirt,.tut-water,.tut-food{
+            color: white;
+        }
         .tut-ant {
-            color: darkred;
+            background-color: darkred;
             /* could we set these in js to ensure the're consistent with colMap? */
         }
 
         .tut-dirt {
-            color: Sienna;
+            background-color: Sienna;
         }
 
         .tut-tunnel {
-            color: sandybrown;
+            background-color: sandybrown;
         }
 
         .tut-food {
-            color: #006a00; /* forestgreen;  #008B00 */
+            background-color: forestgreen; /*#006a00; /* forestgreen;  #008B00 */
         }
 
         .tut-air {
-            color: skyblue;
+            background-color: skyblue;
         }
 
         .tut-grub {
-            color: seashell;
+            background-color: seashell;
         }
 
         .tut-queen {
-            color: hotpink;
+            background-color: hotpink;
         }
 
         .tut-water {
-            color: #00D;
+            background-color: #00D;
         }
     </style>
 </head>
@@ -229,25 +233,26 @@
                 </g>
             </svg>
         </div>
-        <p> Give orders and your ants will try to complete the closest. Choose the type of order using the buttons at the top. Give the orders by clicking where you want them to happen. </p>
-        <p> Dig <span class="tut-dirt">dirt</span> to order your  <span class="tut-ant">worker ants</span> to move it to the closest empty space, turning the space into tunnel <span class="tut-tunnel">tunnel wall</span> This does not block <span class="tut-water">water</span>, but lets ants move freely</p>
-        <p> Ordering <span class="tut-dirt">Dirt</span> to be built makes ants carry <span class="tut-dirt">Dirt</span> to a position. This will turn <span
-                class="tut-air">air</span> into <span class="tut-tunnel">tunnel wall</span>, and <span class="tut-tunnel">tunnel wall</span> into solid <span class="tut-dirt">dirt</span></p>
+        <p> Give orders and your ants will try to complete the closest. Choose a type of order using the buttons at the top. Give the orders by clicking where you want them to happen. Hold the mouse button down to select lots of locations quickly</p>
+        <p> Order <span class="tut-dirt">dirt</span> to be dug and your  <span class="tut-ant">worker ants</span> will move it to the closest empty space, turning the space into tunnel <span class="tut-tunnel">tunnel wall</span>. This does not block <span class="tut-water">water</span>, but lets ants move freely</p>
+        <p> Ordering <span class="tut-air">air</span> to have <span class="tut-dirt">dirt built</span> makes ants carry <span class="tut-dirt">Dirt</span> there, turning it into <span class="tut-tunnel">tunnel wall</span>. Ordering more to be built at the <span class="tut-tunnel">tunnel wall</span> will turn it into solid <span class="tut-dirt">dirt</span></p>
 
-        <p>Use the right mouse button or the Cancel mode to cancel orders. (this is very useful if ants get stuck)</p>
+        <p>Use the right mouse button or the Cancel mode to cancel orders. (This is very useful if ants get stuck)</p>
 
         <p>Use arrow keys, or drag the middle mouse button to pan around the map, and use the scroll wheel
             to zoom.</p>
+        <!--
         <p><span class="tut-dirt">Dirt</span> with no orders to build will be brought to the nearest <span
                 class="tut-air">air</span> space and become a <span class="tut-tunnel">wall</span> for <span
-                class="tut-ant">ants</span> to climb on and <span class="tut-dirt">solid dirt</span> to be built on.</p>
-        <p>Find <span class="tut-food">food</span> to bring to the <span class="tut-queen">Queen</span> to produce <span
-                class="tut-grub">grubs</span> that will grow into new <span class="tut-ant">worker ants</span>.</p>
-        <p>Dig tunnels and build structures to divert <span class="tut-water">water</span> to keep your colony safe from
-            drowning. <span class="tut-water">Rainfall</span> will come and go, but gradually get heavier over time!</p>
-        <p>Use the appropriate order modes to designate <span class="tut-grub">grub nurseries</span> for <span
-                class="tut-ant">ants</span> to bring new <span class="tut-grub">grubs</span> to, and set the <span
-                class="tut-queen">Queen home</span> to have the <span class="tut-queen">Queen</span> be moved.</p>
+                class="tut-ant">ants</span> to climb on and <span class="tut-dirt">solid dirt</span> to be built on.</p> -->
+        <p>Dig up <span class="tut-food">food</span> and it gets brought to the <span class="tut-queen">Queen</span> who will produce <span class="tut-grub">grubs</span> that will grow into new <span class="tut-ant">worker ants</span>.</p>
+
+        <p> <span class="tut-grub">Grubs</span> that get <span class="tut-water">wet</span> die and ants (including the queen) who get surrounded by <span class="tut-water">water</span> drown. Be careful when digging tunnels in the rain! <p/>
+        <p>Dig tunnels and build structures to divert <span class="tut-water">water</span> to keep your colony safe. <span class="tut-water">Rainfall</span> will come and go, but gradually get heavier over time!</p>
+
+        <p> To move <span class="tut-grub">grubs</span>, designate <span class="tut-grub">grub nurseries</span> over <span class="tut-tunnel">tunnel wall</span>. <span class="tut-ant">Ants</span> will automatically bring <span class="tut-grub">grubs</span> to the nurseries.</p>
+        <p> You can also tell them to move the <span class="tut-queen">Queen</span> by using <span class="tut-queen">Queen home</span> to have the  be moved.</p>
+        <p> The first order mode in the top left is probably the most useful - this digs if you select ground or food and places dirt if you select spaces without anything solid.</p>
     </div>
 
     <script src="heap.js"> </script>
