@@ -109,6 +109,11 @@ class Ant {
             let cost = 1
             //cost+=(wcount**2)/Math.sqrt(d+1) // try not to walk through waterlogged places
             let deathChance = (wcount/9)**(9-dirtCount)
+            let cap = 1/50
+            if (deathChance<cap) {deathChance=cap}
+            else if (deathChance>(1-cap)) {deathChance=1-cap}
+            // deathChance=deathChance + 1/(100*deathChance+10) - 1/(100*(1-deathChance)+10)
+            // we're adding costs together, and multiplying chances of survival, so logarithm is appropriate
             cost += (-100)*Math.log(1-deathChance)
             /*consider considering these
             if (!canWalk(q)) return 5
@@ -124,26 +129,12 @@ class Ant {
             start = this.p
         }
         else { assert([...neighbs(start)].find(x => x == this.p + "")) }
-        let heap = [[0, [start, null]]]
-        let seen = {}
-        seen[heap[0][1][0]] = true
-        let found = undefined
-        while (heap.length && !found) {
-            let r = heappop(heap)
-            //console.log(r)
-            let [d, path] = r
-            for (let q of neighbs(path[0])) {
-                //console.log("v")
-                if (!seen[q] && willWalk(q) && inBounds(q) || validOrder(q)) {
-                    //console.log("a")
-                    seen[q] = true
-                    if (validOrder(q)) {
-                        found = [q, path]
-                    }
-                    heappush(heap, d + hCost(q,d), [q, path])
-                }
-            }
+        function visit(p){
+            return [
+                willWalk(p) && inBounds(p)
+                ,validOrder(p) ]
         }
+        let found = search([start],hCost,neighbs,visit)
         //console.log(Object.keys(seen).length, found)
         if (found) {
             let plan = linkedListToArray(found)

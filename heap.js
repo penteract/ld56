@@ -40,3 +40,41 @@ function heapfix(h,l){
     l=p
   }
 }
+
+
+function search(starts, hCost, neighbs, visit, maxDist){
+    if ( maxDist===undefined) maxDist = Infinity
+
+    // This is a heap because that might help with efficiency if we try to reuse it
+    // might give suboptimal paths, but it's better than flood filling the map for every ant.
+    // We probably need a path fixer that removes loops
+
+    let heap = []
+    let seen = {}
+    for (let start of starts){
+        heap.push([0, [start, null]])
+        seen[start]=true
+    }
+    let found = undefined
+    while (heap.length && !found) {
+        let r = heappop(heap)
+        //console.log(r)
+        let [d, path] = r
+        if (d>maxDist) break;
+        for (let q of neighbs(path[0])) {
+            //console.log("v")
+            if (!seen[q]) {
+                let [walk,isGoal] = visit(q)
+                //console.log("a")
+                seen[q] = true
+                if (isGoal) {
+                    found = [q, path]
+                }
+                if(walk){
+                    heappush(heap, d + hCost(q,d), [q, path])
+                }
+            }
+        }
+    }
+    return found
+}
