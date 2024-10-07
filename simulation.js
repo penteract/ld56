@@ -935,7 +935,7 @@ function tick() {
     console.log(- t + (t = performance.now()), "delays")
     k = Math.log(tickCount) - 6
     diffScaler = k ** 2 * Math.sign(k) / 300
-    if (gameMode !== "hard") { diffScaler = 0 }
+    if (gameMode !== "hard" && diffScaler >= 0) { diffScaler = 0 }
     RainProb = (1 + Math.sin(tickCount / 100)) ** 2 * 0.01 + diffScaler
     if (gameMode === "sandbox") { RainProb = 0 }
     // Should this vary by x coordinate? That would mean you'd have to deal with floods coming from the sides, as well as just rain from above
