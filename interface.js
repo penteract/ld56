@@ -11,25 +11,25 @@ function sel(p, button) {
     /*if (shiftHeld && orderMode=="flexible") { can't directly build/place anything except dirt any more
         orderType = getSolidTypeStr(p)
     }*/
-    if((button == 2) || (button == 0 && orderMode=="cancel")){
+    if ((button == 2) || (button == 0 && orderMode == "cancel")) {
         clearOrder(p)
         clearNursery(p)
     }
     else if (button == 0) {
-        if(orderMode=="dig"){
-            if(isSolid(p) && getSolidTypeStr(p)=="dirt") {setOrder(p, "worker")}
+        if (orderMode == "dig") {
+            if (isSolid(p) && (getSolidTypeStr(p) === "dirt" || getSolidTypeStr(p) === "food")) { setOrder(p, "worker") }
         }
-        else if(orderMode=="dirt"){
+        else if (orderMode == "dirt") {
             setOrder(p, "dirt")
         }
-        else if(orderMode=="grub"){
+        else if (orderMode == "grub") {
             designateNursery(p)
         }
-        else if(orderMode=="queen"){
+        else if (orderMode == "queen") {
             setQueenHome(p)
         }
-        if(orderMode=="flexible"){
-            setOrder(p, orderType) || (isSolid(p) && getSolidTypeStr(p) === "dirt" && setOrder(p, "worker"))
+        if (orderMode == "flexible") {
+            setOrder(p, orderType) || (isSolid(p) && (getSolidTypeStr(p) === "dirt" || getSolidTypeStr(p) === "food") && setOrder(p, "worker"))
         }
     }
     redraw()
@@ -63,10 +63,10 @@ window.addEventListener("keyup", (event) => {
 })
 
 OrderText = {
-    "dirt":"build dirt",
-    "dig":"Dig",
-    "grub":"Designate grub Nursery",
-    "queen":"Set Queen's home"
+    "dirt": "build dirt",
+    "dig": "Dig",
+    "grub": "Designate grub Nursery",
+    "queen": "Set Queen's home"
     /*"food":true,*/
 }
 
