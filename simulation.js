@@ -27,28 +27,28 @@ thingLists["tunnel"] = [[0, -1]]
 thingLists["ant"] = []
 thingLists["grub"] = []
 thingLists["nursery"] = []
-queenHome = [-1,0]
+queenHome = [-1, 0]
 let dirts = []
 
 let nmap = {}
 let grubTargeting = {} // Map from nursery spaces to grubs
-function designateNursery(p){
-    if(emptyForOrder(p) && queenHome+""!=p+"" && !nmap[p] ){
+function designateNursery(p) {
+    if (emptyForOrder(p) && queenHome + "" != p + "" && !nmap[p]) {
         thingLists["nursery"].push(p)
-        nmap[p]=true
+        nmap[p] = true
         return true
     }
-    else {return false}
+    else { return false }
 }
-function clearNursery(p){
-    if(nmap[p]){
+function clearNursery(p) {
+    if (nmap[p]) {
         delete nmap[p]
-        thingLists["nursery"] = thingLists["nursery"].filter(x=>x+""!=p+"")
+        thingLists["nursery"] = thingLists["nursery"].filter(x => x + "" != p + "")
         clearOrder(p)
     }
 }
-function setQueenHome(p){
-    if(emptyForOrder(p) && !nmap[p] ){
+function setQueenHome(p) {
+    if (emptyForOrder(p) && !nmap[p]) {
         queenHome = p
     }
 }
@@ -73,32 +73,31 @@ let targets = {} // tracks if anyone is targeting a particular position {[task,p
 
 
 
-function hCost(q,d) {
+function hCost(q, d) {
     /* heuristic function for searches */
     let wcount = 0
     let dirtCount = 0
-    for (let dx = -1; dx <= 1; dx++)for (let dy = -1; dy <= 1; dy++) {
-        let p = add(q, [dx, dy])
+    for (let p of neighbs9(q)) {
         let isw = map[p]?.includes("water")
         wcount += isw
         if (isDirt(p)) {
-            if (draggers[["dirt",p]]) {dirtCount+= Math.min(1,4/d)}
-            else if (targets[["worker",p]]) {dirtCount+= Math.min(1,40/d)}
-            else {dirtCount += 1}
+            if (draggers[["dirt", p]]) { dirtCount += Math.min(1, 4 / d) }
+            else if (targets[["worker", p]]) { dirtCount += Math.min(1, 40 / d) }
+            else { dirtCount += 1 }
         }
-        else if(targets["dirt",p] && map[p]?.includes("tunnel")){
-            dirtCount += 0.5 - 1/d
+        else if (targets["dirt", p] && map[p]?.includes("tunnel")) {
+            dirtCount += 0.5 - 1 / d
         }
     }
     let cost = 1
     //cost+=(wcount**2)/Math.sqrt(d+1) // try not to walk through waterlogged places
-    let deathChance = (wcount/9)**(9-dirtCount)
-    let cap = 1/50
-    if (deathChance<cap) {deathChance=cap}
-    else if (deathChance>(1-cap)) {deathChance=1-cap}
+    let deathChance = (wcount / 9) ** (9 - dirtCount)
+    let cap = 1 / 50
+    if (deathChance < cap) { deathChance = cap }
+    else if (deathChance > (1 - cap)) { deathChance = 1 - cap }
     // deathChance=deathChance + 1/(100*deathChance+10) - 1/(100*(1-deathChance)+10)
     // we're adding costs together, and multiplying chances of survival, so logarithm is appropriate
-    cost += (-100)*Math.log(1-deathChance)
+    cost += (-100) * Math.log(1 - deathChance)
     /*consider considering these
     if (!canWalk(q)) return 5
     if (hasAnt(q)) return 2*/
@@ -139,6 +138,19 @@ class Ant {
         let ordrs = orders[type]
         if (Object.keys(ordrs).length === 0) {
             if (type == "dirt") lookForAir = true
+            else if (type === "food") {
+                ordrs = {}
+                for (let p of neighbs9(queen.p)) {
+                    if (!isSolid(p) && !solidTypes.find(t => targets[[t, p]])) {
+                        ordrs[p] = true
+                    }
+                }
+                if (Object.keys(ordrs).length === 0) {
+                    console.info("food search failed (no space near queen)")
+                    delayedOrders["worker"][start] = 20
+                    return
+                }
+            }
             else if (type !== "worker") {
                 console.info("search failed (no orders)")
                 delayedOrders["worker"][start] = 20
@@ -159,12 +171,12 @@ class Ant {
             start = this.p
         }
         else { assert([...neighbs(start)].find(x => x == this.p + "")) }
-        function visit(p){
+        function visit(p) {
             return [
-                willWalk(p) && inBounds(p)
-                ,validOrder(p) ]
+                willWalk(p, type) && inBounds(p)
+                , validOrder(p)]
         }
-        let found = search([start],hCost,neighbs,visit)
+        let found = search([start], hCost, neighbs, visit)
         //console.log(Object.keys(seen).length, found)
         if (found) {
             let plan = found
@@ -180,11 +192,11 @@ class Ant {
             delayedOrders["worker"][start] = 5
         }
     }
-    cancelTask(){
-        return this.popTask(undefined,true)
+    cancelTask() {
+        return this.popTask(undefined, true)
     }
 
-    popTask(orderDragged,cancel) {
+    popTask(orderDragged, cancel) {
         //return type [type,plan], ["finished",locaton], "finished"
         if (!this.plan) return null
         let plan = this.plan
@@ -212,7 +224,7 @@ class Ant {
             if (orders["worker"][dragPos]) { console.warn("didn't expect an order to already be there") }
             orders["worker"][dragPos] = true
         }
-        if(!cancel) {orders[type][target] = true}
+        if (!cancel) { orders[type][target] = true }
         return [type, plan]
     }
 
@@ -671,8 +683,8 @@ function concatPaths(p1, p2) {
 }
 
 
-function emptyForOrder(p){
-    return (!isSolid(p) && !(solidTypes.find(t => targets[[t, p]] || orders[t][p])) )
+function emptyForOrder(p) {
+    return (!isSolid(p) && !(solidTypes.find(t => targets[[t, p]] || orders[t][p])))
 }
 
 function setOrder(p, type) {
@@ -684,7 +696,7 @@ function setOrder(p, type) {
         }
     }
     else {//TODO: should this remove delayed orders?
-        if (emptyForOrder(p) && (type=="grub" || !(nmap[p])) && !(queenHome+""==p+"")) {
+        if (emptyForOrder(p) && (type == "grub" || !(nmap[p])) && !(queenHome + "" == p + "")) {
             orders[type][p] = true
             return true
         }
@@ -692,19 +704,19 @@ function setOrder(p, type) {
     return false
 }
 
-function clearOrderType(p,type) {
+function clearOrderType(p, type) {
     // assumes dontcancel
     let res = false
     res ||= orders[type][p]
     delete orders[type][p]
     delete delayedOrders[type][p]// maybe this helps
 
-    let w1=targets[[type,p]]
-    if(w1){w1.popTask()}
+    let w1 = targets[[type, p]]
+    if (w1) { w1.popTask() }
     return res
 }
 
-function clearOrder(p,dontCancel) {
+function clearOrder(p, dontCancel) {
     // consider also canceling targeted tasks and/or delayed orders
     let res = false
     let w1 = undefined
@@ -714,12 +726,12 @@ function clearOrder(p,dontCancel) {
         delete orders[t][p]
         delete delayedOrders[t][p]// maybe this helps
 
-        w1??=targets[[t,p]]
-        w2??=draggers[[t,p]]
+        w1 ??= targets[[t, p]]
+        w2 ??= draggers[[t, p]]
     }
-    w1??=targets[["worker",p]]
-    if(w1){dontCancel?w1.popTask():w1.cancelTask()}
-    if(w2){w2.cancelTask()}
+    w1 ??= targets[["worker", p]]
+    if (w1) { dontCancel ? w1.popTask() : w1.cancelTask() }
+    if (w2) { w2.cancelTask() }
     return res
 }
 
@@ -780,8 +792,7 @@ function canStay(p) {
 }
 
 function canBreathe(p) {
-    for (let dx = -1; dx <= 1; dx++)for (let dy = -1; dy <= 1; dy++) {
-        let q = add(p, [dx, dy])
+    for (let q of neighbs9(p)) {
         if (!isDirt(q) && !map[q]?.includes("water")) {
             return true
         }
@@ -803,10 +814,10 @@ function willBeSolid(p) {
     return false
 }
 
-function willWalk(p) {
+function willWalk(p, type) {
     return ((!isSolid(p) &&
         (map[p]?.includes("tunnel") || willBeSolid([p[0], p[1] - 1]) || willBeSolid([p[0] - 1, p[1] - 1]) || willBeSolid([p[0] + 1, p[1] - 1]))
-        || targets[["worker", p]] || solidTypes.find(t => draggers[[t, p]]) || orders["worker"][p])
+        || (targets[["worker", p]] && (type == "worker" || getSolidTypeObj(p) === type)) || solidTypes.find(t => draggers[[t, p]]) || orders["worker"][p])
     )
 }
 
@@ -864,6 +875,12 @@ function* neighbs(p) {
     yield add(p, [0, -1])
 }
 
+function* neighbs9(p) {
+    for (let dx = -1; dx <= 1; dx++)for (let dy = -1; dy <= 1; dy++) {
+        yield add(p, [dx, dy])
+    }
+}
+
 function tryMoveW(src, dst, r, l) {
     if (map[dst]?.includes("water") || isDirt(dst) && r > MudProb) { return false }
     if (inBounds(dst)) {
@@ -881,7 +898,7 @@ tickCount = 0
 function tick() {
     tickCount += 1
     let t = performance.now()
-    console.log(t,"start")
+    console.log(t, "start")
     for (let t in delayedOrders) {
         for (let p in delayedOrders[t]) {
             if (!delayedOrders[t][p]) {
@@ -893,9 +910,9 @@ function tick() {
             }
         }
     }
-    console.log(- t + (t=performance.now()),"delays")
+    console.log(- t + (t = performance.now()), "delays")
     k = Math.log(tickCount) - 6
-    diffScaler = k**2*Math.sign(k) / 300
+    diffScaler = k ** 2 * Math.sign(k) / 300
     RainProb = (1 + Math.sin(tickCount / 100)) ** 2 * 0.01 + diffScaler
     // Should this vary by x coordinate? That would mean you'd have to deal with floods coming from the sides, as well as just rain from above
     let newWater = []
@@ -926,21 +943,23 @@ function tick() {
         newWater.push(p)
     }
     thingLists["water"] = newWater
-    console.log(- t + (t=performance.now()),"water")
+    console.log(- t + (t = performance.now()), "water")
 
     // Search for tasks available
     // tracking ants that have been encountered during the search might be able to speed things up
     // (particularly to avoid searching a large empty region multiple times)
 
     tickThings("ant")
-    console.log(- t + (t=performance.now()),"ants")
+    console.log(- t + (t = performance.now()), "ants")
     nurserySpaces = Object.keys(nmap).length - Object.keys(grubTargeting).length
     tickThings("grub")
-    console.log(- t + (t=performance.now()),"grubs")
+    console.log(- t + (t = performance.now()), "grubs")
     queen.tick()
-    console.log(- t + (t=performance.now()),"queen")
+    console.log(- t + (t = performance.now()), "queen")
+    expandMap()
+    console.log(-t + (t = performance.now()), "mapgen")
     draw()
-    console.log(- t + (t=performance.now()),"draw (end)")
+    console.log(- t + (t = performance.now()), "draw (end)")
 }
 
 function tickThings(thing) {
@@ -975,9 +994,45 @@ let minx = -Margin
 let maxy = Margin
 let miny = -Margin
 
+let maxxgen = 0
+let minxgen = 0
+// let maxygen = 0
+let minygen = 0
+
 function inBounds(p) {
     ; let [x, y] = p
     return (x <= maxx && x >= minx && y <= maxy && y >= miny)
+}
+
+function expandMap() {
+    let x, y
+    for (x = minx; x < minxgen; x++) for (y = -1; y >= miny; y--) {
+        mapGen(x, y)
+    }
+    minxgen = minx
+    for (x = maxx; x > maxxgen; x--) for (y = -1; y >= miny; y--) {
+        mapGen(x, y)
+    }
+    maxxgen = maxx
+    for (y = miny; y < minygen; y++) for (x = minx; x <= maxx; x++) {
+        mapGen(x, y)
+    }
+    minygen = miny
+}
+
+
+function lerp(a, b, t) {
+    return a * (1 - t) + b * t
+}
+
+function mapGen(x, y) {
+    let abs = Math.abs
+    let closeness = abs(abs(x) - abs(y)) % 20
+    let density = lerp(0.05, 0.01, closeness / 20)
+    if (rand() < density && isDirt([x, y])) {
+        take("dirt", [x, y])
+        put("food", [x, y])
+    }
 }
 
 let defined = undefined
@@ -986,6 +1041,7 @@ class Queen {
     constructor(p) {
         put(this, p)
         this.p = p
+        this.hunger = 10
     }
     toString() {
         return "queen"
@@ -994,26 +1050,37 @@ class Queen {
 
     tick() {
         if (!canBreathe(this.p)) {
-            this.kill()
+            this.kill("drowned")
             return
         }
         let space = false
+        for (let n of neighbs9(this.p)) {
+            if (map[n]?.includes("food") && !targets[["worker", n]] && !orders["worker"][n] && !draggers[["food", n]]) {
+                take("food", n)
+                this.hunger += 10
+            }
+        }
         for (let n of neighbs(this.p)) {
-            if (!isSolid(n) && !hasAnt(n) && map[n]?.includes("tunnel")){
+            if (!isSolid(n) && !hasAnt(n) && map[n]?.includes("tunnel")) {
                 space = true
-                if(!map[n]?.includes("water") && rand() < 0.01) {
+                if (!map[n]?.includes("water") && this.hunger > 0 && rand() < 0.01) {
                     new Grub(n)
+                    this.hunger -= 1
                 }
             }
         }
-        if(!space && thingLists["grub"].length===0 && thingLists["ant"].length===0){
+        if (!space && thingLists["grub"].length === 0 && thingLists["ant"].length === 0) {
             gameOver("No ants, and no space to spawn grubs")
+        }
+        if (thingLists["grub"].length === 0 && thingLists["ant"].length === 0 && this.hunger <= 0) {
+            this.kill("starved")
         }
     }
 
-    kill() {
+    kill(reason) {
+        if (!reason) { reason = "died" }
         take(this, this.p)
-        gameOver("Your Queen died")
+        gameOver(`Your Queen ${reason}`)
     }
 }
 
@@ -1021,7 +1088,7 @@ class Grub {
     constructor(p) {
         put(this, p)
         this.p = p
-        clearOrder(this.p,true)
+        clearOrder(this.p, true)
         thingLists["grub"].push(this)
         this.ticksToGrow = Math.floor(75 + rand() * 50)
         this.alive = true
@@ -1036,17 +1103,17 @@ class Grub {
         if ((ant = draggers[["grub", this.p]]) || (ant = targets[["worker", this.p]])) {
             ant.popTask()
         }
-        clearOrderType(this.p,"worker")
+        clearOrderType(this.p, "worker")
         take(this, this.p)
-        if(this.plan && grubTargeting[this.plan[0]]===this) {
-            nurserySpaces+=1
+        if (this.plan && grubTargeting[this.plan[0]] === this) {
+            nurserySpaces += 1
             delete grubTargeting[this.plan[0]]
-            clearOrderType(this.plan[0],"grub")
+            clearOrderType(this.plan[0], "grub")
         }
     }
 
     tick() {
-        if(this.plan && grubTargeting[this.plan[0]]!==this){this.plan=undefined}
+        if (this.plan && grubTargeting[this.plan[0]] !== this) { this.plan = undefined }
         if (map[this.p]?.includes("water")) {
             this.kill()
             return
@@ -1056,19 +1123,19 @@ class Grub {
             this.kill()
             new Ant(this.p)
         }
-        if (nurserySpaces > 0 && !nmap[this.p] && !this.plan && !draggers[["grub",this.p]]){
-            function visit(p){
+        if (nurserySpaces > 0 && !nmap[this.p] && !this.plan && !draggers[["grub", this.p]]) {
+            function visit(p) {
                 let walkable = willWalk(p)
-                return [walkable,walkable && nmap[p] && !grubTargeting[p]]
+                return [walkable, walkable && nmap[p] && !grubTargeting[p]]
             }
             let found = search([this.p], hCost, neighbs, visit)
-            if(found){
-                if(setOrder(this.p,"worker")){
-                    if(setOrder(found[0],"grub")){
+            if (found) {
+                if (setOrder(this.p, "worker")) {
+                    if (setOrder(found[0], "grub")) {
                         // TODO: if a grub gets dropped temporarily, the order doesn't get unset
-                        grubTargeting[found[0]]=this
+                        grubTargeting[found[0]] = this
                         this.plan = found
-                        nurserySpaces-=1
+                        nurserySpaces -= 1
                     }
                 }
             }
@@ -1084,12 +1151,13 @@ for (let x = 0; x < 5; x++) {
     //queen = new Ant([0, 0])
     new Ant([x, 0])
 
-    //take("dirt", [2 * x, -3])
-    //put("food", [2 * x, -3])
+    // take("dirt", [2 * x, -3])
+    // put("food", [2 * x, -3])
 }
 
 queen = new Queen([-1, 0])
 
+expandMap()
 
 
 
