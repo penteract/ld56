@@ -609,7 +609,7 @@ class Ant {
         }
 
         if (!this.plan) {
-            console.log("finding target")
+            //console.log("finding target")
             this.findTarget("worker")
         }
         if (this.plan) { // Execute plan
@@ -833,6 +833,8 @@ tickCount = 0
 
 function tick() {
     tickCount += 1
+    let t = performance.now()
+    console.log(t,"start")
     for (let t in delayedOrders) {
         for (let p in delayedOrders[t]) {
             if (!delayedOrders[t][p]) {
@@ -844,7 +846,10 @@ function tick() {
             }
         }
     }
-    RainProb = (1 + Math.sin(tickCount / 100)) ** 2 * 0.01
+    console.log(- t + (t=performance.now()),"delays")
+    k = Math.log(tickCount) - 6
+    diffScaler = k**2*Math.sign(k) / 300
+    RainProb = (1 + Math.sin(tickCount / 100)) ** 2 * 0.01 + diffScaler
     // Should this vary by x coordinate? That would mean you'd have to deal with floods coming from the sides, as well as just rain from above
     let newWater = []
     for (let x = minx; x <= maxx; x++) {
@@ -874,15 +879,20 @@ function tick() {
         newWater.push(p)
     }
     thingLists["water"] = newWater
+    console.log(- t + (t=performance.now()),"water")
 
     // Search for tasks available
     // tracking ants that have been encountered during the search might be able to speed things up
     // (particularly to avoid searching a large empty region multiple times)
 
     tickThings("ant")
+    console.log(- t + (t=performance.now()),"ants")
     tickThings("grub")
+    console.log(- t + (t=performance.now()),"grubs")
     queen.tick()
+    console.log(- t + (t=performance.now()),"queen")
     draw()
+    console.log(- t + (t=performance.now()),"draw (end)")
 }
 
 function tickThings(thing) {
