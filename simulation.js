@@ -107,8 +107,7 @@ function hCost(q, d) {
 
 function incScore(amt = 1) {
     score += amt
-    localStorage["highScore"] ??= 0
-    localStorage["highScore"] = Math.max(score, localStorage["highScore"])
+    localStorage["highScore" + gameMode] = Math.max(score, localStorage["highScore" + gameMode] ?? 0)
 }
 
 workerOrdersAttempted = 0
@@ -936,7 +935,9 @@ function tick() {
     console.log(- t + (t = performance.now()), "delays")
     k = Math.log(tickCount) - 6
     diffScaler = k ** 2 * Math.sign(k) / 300
+    if (gameMode !== "hard") { diffScaler = 0 }
     RainProb = (1 + Math.sin(tickCount / 100)) ** 2 * 0.01 + diffScaler
+    if (gameMode === "sandbox") { RainProb = 0 }
     // Should this vary by x coordinate? That would mean you'd have to deal with floods coming from the sides, as well as just rain from above
     let newWater = []
     for (let x = minx; x <= maxx; x++) {

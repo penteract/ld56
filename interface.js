@@ -85,11 +85,11 @@ updateHud()
 function gameOver(reason) {
     clearInterval(tickInterval)
     redraw()
-    alert(`${reason}, game over!\nYou survived ${tickCount - 1} steps.\nRefresh the page to retry.\n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
+    alert(`${reason}, game over!\nYou survived ${tickCount - 1} steps.\nRefresh the page to retry.\n\nScore: ${score}\nHighest: ${localStorage['highScore' + gameMode]}`)
 }
 
 function win() {
-    alert(`You won! You survived ${tickCount} steps.\nClick ok to continue playing, or refresh the page to start over. \n\nScore: ${score}\nHighest: ${localStorage['highScore']}`)
+    alert(`You won! You survived ${tickCount} steps.\nClick ok to continue playing, or refresh the page to start over. \n\nScore: ${score}\nHighest: ${localStorage['highScore' + gameMode]}`)
 }
 
 wasPaused = false
@@ -105,11 +105,11 @@ function hideTutorial() {
     // if (!wasPaused) resume()
 }
 
-function toggleTutorial(){
-    if(document.getElementById("tutorial").style.display == "block"){
+function toggleTutorial() {
+    if (document.getElementById("tutorial").style.display == "block") {
         hideTutorial()
     }
-    else{
+    else {
         showTutorial()
     }
 }
@@ -121,4 +121,4 @@ showTutorial()
 
 let urlParams = new URLSearchParams(window.location.search);
 let gameMode = urlParams.get('gameMode');
-if(!["easy","hard","sandbox"].includes(gameMode)) {console.warn("unrecognized gamemode"); gameMode="easy" }
+if (!["easy", "hard", "sandbox"].includes(gameMode)) { console.warn("unrecognized gamemode"); gameMode = "easy" }
