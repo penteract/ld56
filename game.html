@@ -3,6 +3,9 @@
 <head>
     <title> Anthill </title>
     <style>
+        html{
+          overflow:hidden;
+        }
         html,
         body,
         canvas {
@@ -12,7 +15,7 @@
 
         #hud {
             position: absolute;
-            width: 100%;
+            width: calc(100%-10px);
             /*height: 10%;*/
             top: 0px;
             margin: 0px;
@@ -69,6 +72,8 @@
             background: #8a83a7e7;
             padding: 20px;
             border: #2222 10px solid;
+            overflow:scroll;
+            max-height:100%;
         }
 
         #tutorial>h1 {
