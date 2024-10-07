@@ -49,8 +49,8 @@ function updateHud() {
     document.getElementById("order-mode").textContent = orderMode + " " + orderType
 }
 
-function gameOver() {
+function gameOver(reason) {
     clearInterval(tickInterval)
     redraw()
-    alert("Your queen died! Refresh the page to retry.")
+    alert(`${reason}, game over!\nRefresh the page to retry.`)
 }

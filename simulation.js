@@ -947,17 +947,23 @@ class Queen {
             this.kill()
             return
         }
-
+        let space = false
         for (let n of neighbs(this.p)) {
-            if (!isSolid(n) && !hasAnt(n) && map[n]?.includes("tunnel") && !map[n]?.includes("water") && rand() < 0.01) {
-                new Grub(n)
+            if (!isSolid(n) && !hasAnt(n) && map[n]?.includes("tunnel")){
+                space = true
+                if(!map[n]?.includes("water") && rand() < 0.01) {
+                    new Grub(n)
+                }
             }
+        }
+        if(!space && thingLists["grub"].length===0 && thingLists["ant"].length===0){
+            gameOver("No ants, and no space to spawn grubs")
         }
     }
 
     kill() {
         take(this, this.p)
-        gameOver()
+        gameOver("Your Queen died")
     }
 }
 
