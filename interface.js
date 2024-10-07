@@ -11,28 +11,26 @@ function sel(p, button) {
     /*if (shiftHeld && orderMode=="flexible") { can't directly build/place anything except dirt any more
         orderType = getSolidTypeStr(p)
     }*/
-    if (button == 0) {
-        if(orderMode=="cancel"){
-            clearOrder(p)
-        }
-        else if(orderMode=="dig"){
+    if((button == 2) || (button == 0 && orderMode=="cancel")){
+        clearOrder(p)
+        clearNursery(p)
+    }
+    else if (button == 0) {
+        if(orderMode=="dig"){
             if(isSolid(p) && getSolidTypeStr(p)=="dirt") {setOrder(p, "worker")}
         }
         else if(orderMode=="dirt"){
             setOrder(p, "dirt")
         }
         else if(orderMode=="grub"){
-            thingLists["nursery"].push(p)
+            designateNursery(p)
         }
         else if(orderMode=="queen"){
-            thingLists["queenHome"] = [p]
+            setQueenHome(p)
         }
         if(orderMode=="flexible"){
             setOrder(p, orderType) || (isSolid(p) && getSolidTypeStr(p) === "dirt" && setOrder(p, "worker"))
         }
-    }
-    else if (button == 2) {
-        clearOrder(p)
     }
     redraw()
 }
