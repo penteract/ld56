@@ -66,7 +66,8 @@ OrderText = {
     "dirt": "build dirt",
     "dig": "Dig",
     "grub": "Designate grub Nursery",
-    "queen": "Set Queen's home"
+    "queen": "Set Queen's home",
+    "flexible":"Dig and build dirt"
     /*"food":true,*/
 }
 
