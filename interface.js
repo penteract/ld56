@@ -63,10 +63,11 @@ window.addEventListener("keyup", (event) => {
 })
 
 OrderText = {
-    "dirt": "build dirt",
+    "dirt": "Build dirt",
     "dig": "Dig",
     "grub": "Designate grub Nursery",
-    "queen": "Set Queen's home"
+    "queen": "Set Queen's home",
+    "flexible": "Dig and build dirt"
     /*"food":true,*/
 }
 
@@ -74,6 +75,7 @@ function updateHud() {
     let orderMode = document.querySelector('input[name="action"]:checked').value
     document.getElementById("order-mode").textContent = OrderText[orderMode]
     // orderMode + " " + orderType
+    document.getElementById("queen-sat").textContent = queen.hunger
 }
 updateHud()
 

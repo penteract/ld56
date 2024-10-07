@@ -1041,7 +1041,7 @@ class Queen {
     constructor(p) {
         put(this, p)
         this.p = p
-        this.hunger = 10
+        this.hunger = 5
     }
     toString() {
         return "queen"
@@ -1057,7 +1057,7 @@ class Queen {
         for (let n of neighbs9(this.p)) {
             if (map[n]?.includes("food") && !targets[["worker", n]] && !orders["worker"][n] && !draggers[["food", n]]) {
                 take("food", n)
-                this.hunger += 10
+                this.hunger += 3
             }
         }
         for (let n of neighbs(this.p)) {
@@ -1147,7 +1147,7 @@ class Grub {
 
 take("dirt", [0, -1])
 
-for (let x = 0; x < 5; x++) {
+for (let x = 0; x < 3; x++) {
     //queen = new Ant([0, 0])
     new Ant([x, 0])
 
