@@ -983,7 +983,7 @@ class Grub {
     kill() {
         this.alive = false
         let ant
-        if ((ant = draggers[["grub", this.p]]) || (ant = targets[["grub", this.p]])) {
+        if ((ant = draggers[["grub", this.p]]) || (ant = targets[["worker", this.p]])) {
             ant.popTask()
         }
         clearOrder(this.p)
