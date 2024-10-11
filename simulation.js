@@ -76,12 +76,13 @@ let targets = {} // tracks if anyone is targeting a particular position {[task,p
 
 
 function hCost(q, d) {
+    d+=1 // Don't divide by zero
     /* heuristic function for searches */
     let wcount = 0
     let dirtCount = 0
     for (let p of neighbs9(q)) {
         let isw = map[p]?.includes("water")
-        wcount += isw
+        wcount += isw?1:0
         if (isDirt(p)) {
             if (draggers[["dirt", p]]) { dirtCount += Math.min(1, 4 / d) }
             else if (targets[["worker", p]]) { dirtCount += Math.min(1, 40 / d) }
@@ -141,6 +142,9 @@ class Ant {
         this.alive = false
         take(this, this.p)
     }
+    initTick(){
+        this.searchFailed=undefined // tracks whether a search for a worker order from this ant has failed
+    }
 
     findTarget(type, start, lookForAir = false) {
         // console.log(this, type, start)
@@ -191,9 +195,27 @@ class Ant {
                 willWalk(p, type)
                 , validOrder(p)]
         }
+        if(type=="worker"){
+            let thisAnt = this
+            visit = function(p) {
+                let other = map[p]?.find(x=> x instanceof Ant)
+                if (other?.searchFailed){
+                    thisAnt.searchFailed = true
+                    return [false,true]
+                }
+                return [
+                    willWalk(p, type)
+                    , validOrder(p)]
+            }
+        }
         let found = search([start], hCost, neighbs, visit)
         //console.log(Object.keys(seen).length, found)
-        if (type == "worker") { workerOrdersAttempted += 1 }
+        if (type == "worker") {
+            workerOrdersAttempted += 1
+            if(this.searchFailed) {found=undefined}
+            this.searchFailed = found?true:false
+
+        }
         if (found) {
             let plan = found
             console.log(plan)
@@ -976,14 +998,17 @@ function tick() {
 
     workerOrdersAttempted = 0
     workerOrderSucceeded = false
+    for (let ant of thingLists["ant"]){
+        ant.initTick()
+    }
     tickThings("ant")
-    if (workerOrdersAttempted >= 5 && !workerOrderSucceeded) {
+    /*if (workerOrdersAttempted >= 5 && !workerOrderSucceeded) {
         console.warn("too many unreachable worker orders - delaying")
         for (let p in orders["worker"]) {
             delete orders["worker"][p]
             delayedOrders["worker"][p] = workerOrdersAttempted * 2
         }
-    }
+    }*/
 
     console.log(- t + (t = performance.now()), "ants")
     nurserySpaces = Object.keys(nmap).length - Object.keys(grubTargeting).length
