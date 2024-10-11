@@ -79,6 +79,7 @@ function updateHud() {
     document.getElementById("queen-sat").textContent = queen.hunger
     document.getElementById("population").textContent = thingLists["ant"].length + queen.alive
     document.getElementById("score").textContent = score
+    document.getElementById("time").textContent = tickCount
 }
 updateHud()
 
